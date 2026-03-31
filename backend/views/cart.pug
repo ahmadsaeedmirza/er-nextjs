@@ -1,0 +1,231 @@
+extends base
+
+//- Mixin to render individual cart items
+mixin cartItem(item)
+    div(class="cart-item grid grid-cols-1 md:grid-cols-12 items-center border-b py-6 gap-4", data-product-id=item.productId, data-price=item.price)
+        div(class="col-span-6 flex gap-4")
+            img(src=`/images/products/${item.image}`, class="w-20 h-20 object-cover rounded-md")
+            div
+                h3(class="font-bold text-lg")= item.name
+                p(class="text-sm font-semibold text-[#CF1745E6]") 2 to 5 Business Days
+                p(class="text-xs text-gray-400 mt-1")= item.detail
+
+            div(class="grid place-items-center w-2/4 cursor-pointer delete-item", data-product-id=item.productId)
+                i(class="fa-solid text-xl hover:text-[#CF1745] fa-trash-can")
+    
+        div(class="md:col-span-2 text-right font-medium item-price")= `$${Number(item.price).toFixed(2)}`
+    
+        div(class="md:col-span-2 flex justify-center")
+            div(class="flex items-center border border-gray-300 rounded")
+                button(class="qty-decrease px-3 py-1 hover:bg-gray-100") −
+                span(class="qty-value px-4 text-sm")= item.quantity
+                button(class="qty-increase px-3 py-1 hover:bg-gray-100") +
+    
+        div(class="md:col-span-2 text-right font-bold item-total")= `$${(Number(item.price) * item.quantity).toFixed(2)}`
+
+block content
+    main(class="max-w-5xl mx-auto px-6 py-12")
+        h1(class="text-3xl font-bold mb-10") Your Cart
+
+        //- Table Header
+        div(class="hidden md:grid grid-cols-12 text-sm text-gray-500 uppercase border-b pb-4 mb-2")
+            div(class="col-span-6") Item
+            div(class="col-span-2 text-right") Price
+            div(class="col-span-2 text-center") Quantity
+            div(class="col-span-2 text-right") Total
+
+        //- Check if items exist before looping
+        if cartItems && cartItems.length > 0
+            each item in cartItems
+                +cartItem(item)
+        else
+            p(class="py-10 text-center text-gray-500") Your cart is empty.
+
+        //- Checkout & Shipping Form Section
+        div(class="flex flex-col lg:flex-row mt-12 gap-12")
+      
+            //- Shipping Address Form
+            div(class="flex-1 bg-[#E7E5E4/60] shadow-2xl rounded-xl p-16")
+                h2(class="text-xl font-bold mb-6") Shipping Information
+                form(class="grid grid-cols-1 md:grid-cols-2 gap-4")
+                    div(class="md:col-span-2")
+                        label(class="block text-sm text-stone-400 font-medium mb-1") Full Name
+                        input(type="text" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" required)
+                    div(class="md:col-span-2")
+                        label(class="block text-sm text-stone-400 font-medium mb-1") Street Address
+                        input(type="text" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" required)
+                    div(class="md:col-span-2")
+                        input(type="text" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" placeholder="Apartment, suite, etc. (optional)")
+                    div
+                        label(class="block text-sm text-stone-400 font-medium mb-1") City
+                        input(type="text" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" required)
+                    div
+                        label(class="block text-sm text-stone-400 font-medium mb-1") State
+                        select(class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" required)
+                            option(value="") Select State
+                            option(value="AL") Alabama
+                            option(value="AK") Alaska
+                            option(value="AZ") Arizona
+                            option(value="AR") Arkansas
+                            option(value="CA") California
+                            option(value="CO") Colorado
+                            option(value="CT") Connecticut
+                            option(value="DE") Delaware
+                            option(value="FL") Florida
+                            option(value="GA") Georgia
+                            option(value="HI") Hawaii
+                            option(value="ID") Idaho
+                            option(value="IL") Illinois
+                            option(value="IN") Indiana
+                            option(value="IA") Iowa
+                            option(value="KS") Kansas
+                            option(value="KY") Kentucky
+                            option(value="LA") Louisiana
+                            option(value="ME") Maine
+                            option(value="MD") Maryland
+                            option(value="MA") Massachusetts
+                            option(value="MI") Michigan
+                            option(value="MN") Minnesota
+                            option(value="MS") Mississippi
+                            option(value="MO") Missouri
+                            option(value="MT") Montana
+                            option(value="NE") Nebraska
+                            option(value="NV") Nevada
+                            option(value="NH") New Hampshire
+                            option(value="NJ") New Jersey
+                            option(value="NM") New Mexico
+                            option(value="NY") New York
+                            option(value="NC") North Carolina
+                            option(value="ND") North Dakota
+                            option(value="OH") Ohio
+                            option(value="OK") Oklahoma
+                            option(value="OR") Oregon
+                            option(value="PA") Pennsylvania
+                            option(value="RI") Rhode Island
+                            option(value="SC") South Carolina
+                            option(value="SD") South Dakota
+                            option(value="TN") Tennessee
+                            option(value="TX") Texas
+                            option(value="UT") Utah
+                            option(value="VT") Vermont
+                            option(value="VA") Virginia
+                            option(value="WA") Washington
+                            option(value="WV") West Virginia
+                            option(value="WI") Wisconsin
+                            option(value="WY") Wyoming
+                    //- Add all 50 states here
+                    div
+                        label(class="block text-sm text-stone-400 font-medium mb-1") ZIP Code
+                        input(type="text" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" pattern="[0-9]{5}" required)
+                    div
+                        label(class="block text-sm text-stone-400 font-medium mb-1") Phone Number
+                        input(type="tel" class="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all" required)
+
+            //- Summary Section
+            div(class="w-full lg:w-1/3 flex flex-col items-end")
+                div(class="w-full space-y-4 bg-gray-50 p-6 rounded-lg")
+                    div(class="flex justify-between")
+                        span Subtotal:
+                        span(class="font-medium", id="subtotal") $0.00
+                    div(class="flex justify-between")
+                        span Sales Tax:
+                        span(class="font-medium", id="tax") $0.00
+                    div(class="flex justify-between border-t pt-4 font-bold text-xl")
+                        span Grand total:
+                        span(id="grand-total") $0.00
+
+                    button(class="w-full mt-6 bg-[#CF1745E6] text-white py-4 font-bold uppercase rounded-lg tracking-widest hover:scale-105 transition-transform cursor-pointer")
+                        | Place Order
+
+block scripts
+    script.
+        const TAX_RATE = 0.10; // 10% tax rate
+
+        function calculateTotals() {
+            let subtotal = 0;
+            // Only target cart-item rows, not delete buttons
+            document.querySelectorAll(".cart-item").forEach(row => {
+                const price = parseFloat(row.getAttribute("data-price"));
+                const quantity = parseInt(row.querySelector(".qty-value").innerText);
+                const itemTotal = price * quantity;
+                
+                // Update item total
+                row.querySelector(".item-total").innerText = `$${itemTotal.toFixed(2)}`;
+                subtotal += itemTotal;
+            });
+
+            const tax = subtotal * TAX_RATE;
+            const grandTotal = subtotal + tax;
+
+            document.getElementById("subtotal").innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById("tax").innerText = `$${tax.toFixed(2)}`;
+            document.getElementById("grand-total").innerText = `$${grandTotal.toFixed(2)}`;
+        }
+
+        // Add event listeners to quantity buttons
+        document.querySelectorAll(".qty-increase").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const qtySpan = btn.parentElement.querySelector(".qty-value");
+                qtySpan.innerText = parseInt(qtySpan.innerText) + 1;
+                calculateTotals();
+            });
+        });
+
+        document.querySelectorAll(".qty-decrease").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const qtySpan = btn.parentElement.querySelector(".qty-value");
+                const currentQty = parseInt(qtySpan.innerText);
+                if (currentQty > 1) {
+                    qtySpan.innerText = currentQty - 1;
+                    calculateTotals();
+                }
+            });
+        });
+
+        // Calculate totals on page load
+        calculateTotals();
+
+        // Delete item functionality
+        document.querySelectorAll(".delete-item").forEach(deleteBtn => {
+          deleteBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const productId = deleteBtn.getAttribute("data-product-id");
+            console.log("Attempting to delete product:", productId);
+            
+            if (!productId) {
+              console.error("No productId found");
+              return;
+            }
+            
+            try {
+              const response = await axios.post("/api/cart/remove", { productId: productId });
+              console.log("Delete response:", response.data);
+              
+              // Show success toast
+              const toast = document.getElementById("toast");
+              toast.innerText = "Item removed from cart";
+              toast.classList.remove("bg-red-600", "opacity-0");
+              toast.classList.add("bg-[#CF1745]", "opacity-100");
+              
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            } catch (err) {
+              console.error("Error removing cart item:", err.response?.data || err.message);
+              
+              // Show error toast
+              const toast = document.getElementById("toast");
+              toast.innerText = "Failed to remove item";
+              toast.classList.remove("bg-[#CF1745]", "opacity-0");
+              toast.classList.add("bg-red-600", "opacity-100");
+              
+              setTimeout(() => {
+                toast.classList.remove("opacity-100");
+                toast.classList.add("opacity-0");
+              }, 3000);
+            }
+          });
+        });

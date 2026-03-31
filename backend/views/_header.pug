@@ -1,0 +1,79 @@
+header.header
+  nav(class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md")
+    div(class="max-w-7xl mx-auto px-6 h-25 flex items-center justify-between py-3")
+      // Logo
+      a(href="/", class="text-4xl font-bold text-primary font-dancing") 
+        img(src="/images/logo-3.png", alt="Salon Logo", class="h-20 w-auto")
+
+      // Desktop Links
+      div(class="hidden md:flex items-center gap-6")
+        a(
+          href="/"
+          class="relative group py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:text-[#CF1745] " + (currentUrl === '/' ? 'text-[#CF1745]' : '')
+        )
+          | Home
+          span(
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-[#CF1745] origin-center transition-transform duration-300 ease-out " + 
+            (currentUrl === '/' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')
+          )
+
+        a(
+          href="/services"
+          class="relative group py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:text-[#CF1745] " + (currentUrl === '/services' ? 'text-[#CF1745]' : '')
+        )
+          | Services 
+          span(
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-[#CF1745] origin-center transition-transform duration-300 ease-out " + 
+            (currentUrl === '/services' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')
+          )
+
+        a(
+          href="/products"
+          class="relative group py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:text-[#CF1745] " + (currentUrl === '/products' ? 'text-[#CF1745]' : '')
+        )
+          | Products
+          span(
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-[#CF1745] origin-center transition-transform duration-300 ease-out " + 
+            (currentUrl === '/products' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')
+          )
+
+        a(
+          href="/bookAppointment"
+          class="relative group py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:text-[#CF1745] " + (currentUrl === '/bookAppointment' ? 'text-[#CF1745]' : '')
+        )
+          | Book Appointment 
+          span(
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-[#CF1745] origin-center transition-transform duration-300 ease-out " + 
+            (currentUrl === '/bookAppointment' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')
+          )
+
+        a(
+          href="/contactUs"
+          class="relative group py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:text-[#CF1745] " + (currentUrl === '/contactUs' ? 'text-[#CF1745]' : '')
+        )
+          | Contact Us
+          span(
+            class="absolute bottom-0 left-0 w-full h-0.5 bg-[#CF1745] origin-center transition-transform duration-300 ease-out " + 
+            (currentUrl === '/contactUs' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100')
+          )
+
+        a(class="relative hover:text-[#CF1745] transition-colors", href="/cart")
+          span(class="fa-solid fa-cart-shopping text-xl")
+          if cartCount > 0
+            span(class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full border border-white font-bold")
+              = cartCount
+
+      // Mobile Hamburger Button
+      button#mobile-menu-btn(class="md:hidden text-2xl p-2")
+        i(class="fa-solid fa-bars")
+
+    // Mobile Menu Container (Hidden by default)
+    #mobile-menu(class="hidden md:hidden bg-white flex flex-col items-center gap-4 py-6 transition-all duration-300 ease-in-out")
+      a(class="text-sm font-semibold uppercase", href="/") Home
+      a(class="text-sm font-semibold uppercase", href="/products") Products
+      a(class="text-sm font-semibold uppercase", href="/services") Services
+      a(class="text-sm font-semibold uppercase", href="/bookAppointment") Book Appointment 
+      a(class="text-sm font-semibold uppercase", href="/contactUs") Contact Us 
+      a(class="relative hover:text-primary transition-colors", href="/cart")
+          span(class="fa-solid fa-cart-shopping text-xl")
+          span(class="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white")

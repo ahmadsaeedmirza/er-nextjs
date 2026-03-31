@@ -1,0 +1,141 @@
+extends base
+
+mixin productCard(image, title, description)
+  div(class="group relative bg-white dark:bg-background-dark/50 rounded-xl overflow-hidden shadow-2xl hover:-translate-y-2 transition-all duration-500")
+    div(class="h-80 overflow-hidden")
+      img(class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700", src=image, alt=title)
+    div(class="p-8")
+      h4(class="text-2xl font-semibold mb-4 text-kerning capitalize")= title
+      p(class="text-slate-500 dark:text-slate-400 mb-6 font-light leading-relaxed")= description
+      button(class="px-6 py-2 bg-[#CF1745E6] text-white rounded-lg font-bold text-sm uppercase tracking-widest") Buy Now
+
+mixin instagramPost(imgUrl, altText)
+  div(class="aspect-square relative group cursor-pointer overflow-hidden rounded-lg")
+    img(
+      src=imgUrl, 
+      alt="Instagram Post", 
+      data-alt=altText,
+      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+    )
+    div(class="absolute inset-0 bg-[#CF1745] opacity-0 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none")
+    div(class="absolute inset-0 bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center")
+      span(class="material-icons text-white text-3xl") 
+        i(class="fa-solid fa-heart text-white")
+
+mixin serviceCard(imgUrl, altText, price, title, description, duration)
+  div(class="service-card group bg-[#f8f6f6] rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all")
+    div(class="h-64 overflow-hidden relative")
+      img(class="service-image w-full h-full object-cover transition-transform duration-700 hover:scale-[1.05]", src=imgUrl, alt="Hair Service", data-alt=altText)
+      div(class="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded text-primary font-bold text-sm")
+        | From $#{price}
+    div(class="p-8")
+      h3(class="text-xl font-bold mb-2")= title
+      p(class="text-sm opacity-70 mb-6 leading-relaxed")= description
+      div(class="flex items-center justify-between")
+        span(class="text-xs font-semibold uppercase tracking-widest opacity-50")= duration + " Minutes"
+        a(class="flex items-center gap-2 text-primary cursor-pointer font-bold text-[#CF1745E6] group-hover:translate-x-1 transition-transform", href="/bookAppointment?service=" + title)
+          | BOOK NOW
+          span(class="material-icons text-sm") 
+            i(class="fa-solid fa-chevron-right text-[#CF1745E6]")
+
+block content 
+
+    //- HERO SECTION
+
+    main(class="relative min-h-screen flex items-center pt-20 overflow-hidden")
+      //- Image Container
+      div(class="absolute inset-0 z-0")
+        img(
+          alt="Luxury Salon Interior",
+          class="w-full h-full object-cover",
+          src="/images/landing-page-img.jpg"
+        )
+        div(class="absolute inset-0 hero-gradient bg-black/40")
+
+      //- Content Container
+      div(class="relative z-10 max-w-7xl mx-auto px-6 w-full")
+        div(class="max-w-2xl text-white")
+          span(class="inline-block px-4 py-1 bg-primary/20 border border-primary/30 rounded-full text-xs font-bold uppercase tracking-widest mb-6") ESTABLISHED 2012
+
+          //- FIX: The span is now nested inside h1
+          h1(class="text-6xl md:text-8xl font-light mb-8 leading-tight") 
+            | Luxury Beauty 
+            span(class="font-bold text-primary italic") Experience
+
+          p(class="text-lg text-slate-200 mb-10 leading-relaxed max-w-lg font-light") Indulge in the finest hair and skin treatments tailored specifically for your lifestyle. Our master stylists blend artistry with science for unparalleled results.
+
+          div(class="flex flex-col sm:flex-row gap-4")
+            a(class="px-8 py-4 bg-[#CF1745E6] text-white rounded-xl font-bold uppercase tracking-widest hover:scale-105 transition-transform shadow-xl shadow-primary/30", href="/bookAppointment") Book Appointment
+            a(class="px-8 py-4 bg-transparent border-2 border-white/40 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white hover:text-[#CF1745E6] transition-all", href="/products") Shop Products  
+
+    //- SERVICES SECTION
+    section(class="py-24")
+      div(class="text-center mb-20")
+        h2(class="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4") Our Services
+        h3(class="text-sm font-semibold text-[#CF1745E6]") Premium Care 
+      div(class="flex flex-col max-w-7xl mx-auto px-6")
+        div(class="flex justify-end mb-4")
+          a(class="cursor-pointer text-[#CF1745E6]", href="/services") View All 
+            i(class="fa-solid fa-chevron-right text-[#CF1745E6]")
+        div(class="grid grid-cols-2 md:grid-cols-4 gap-4")
+          +serviceCard("./images/manicure.jpg", "Professional stylist cutting long hair in salon", "85", "Signature Haircut & Styling", "Personalized consultation, luxury wash, precision cut, and professional blowout.", "60")
+          +serviceCard("./images/manicure.jpg", "Model with professional balayage blonde hair highlights", "210", "Bespoke Color Treatment", "Hand-painted highlights for a natural, sun-kissed look. Includes toner and treatment.", "180")
+          +serviceCard("./images/manicure.jpg", "Hair treatment being applied in salon bowl", "120", "Rejuvenating Facial", "Deep reparative treatment to eliminate frizz and restore shine for up to 3 months.", "90")
+          +serviceCard("./images/manicure.jpg", "Hair treatment being applied in salon bowl", "120", "Deep Tissue Stone Massage", "Deep reparative treatment to eliminate frizz and restore shine for up to 3 months.", "90")
+    
+    //- ABOUT US SECTION
+
+    section(class="py-24 bg-background-dark text-white overflow-hidden relative bg-[#CF1745E6]")
+      div(class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none")
+        div(class="text-[20rem] font-bold text-white leading-none -rotate-12 transform -translate-x-20 -translate-y-20") LUXURY
+
+      div(class="max-w-4xl mx-auto px-6 relative z-10 text-center")
+        div(class="mb-12")
+          h2(class="text-primary text-white text-sm font-bold tracking-[0.3em] uppercase mb-4") About Us 
+          span(class="material-icons text-primary text-6xl") 
+            i(class="fa-solid fa-quote-right")
+    
+        div
+          p(class="text-2xl md:text-3xl font-light italic leading-relaxed mb-8")
+          | Welcome to E & R Salon — your destination for beauty, relaxation, and self-care. We are passionate about helping you look and feel your best in a comfortable and uplifting environment.
+          p(class="text-2xl md:text-3xl font-light italic leading-relaxed mb-8")
+          | Our experienced professionals specialize in hair styling, skincare, nail artistry, and rejuvenating spa treatments. Every client is unique, and we take pride in creating personalized experiences that enhance your natural beauty.
+          p(class="text-2xl md:text-3xl font-light italic leading-relaxed mb-8")
+          | At E & R, your confidence is our greatest achievement.
+
+        div(class="material-icons text-primary text-6xl mt-12") 
+          i(class="fa-solid fa-quote-left")
+
+    //- PRODUCT SECTION
+
+    section(class="marble-bg py-24 relative")
+      div(class="max-w-7xl mx-auto px-6")
+        div(class="text-center mb-20")
+          h2(class="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4") Our Products
+          h3(class="text-4xl md:text-5xl font-light dark:text-white") Curated Artistry
+
+        div(class="grid grid-cols-1 md:grid-cols-3 gap-8")
+          each product in products.slice(0, 3)
+            +productCard(
+              `/images/products/${product.productImage}`, 
+              product.name, 
+              product.description
+            )
+
+    //- INSTAGRAM GALLERY SECTION
+
+    section(class="py-24 bg-[#F8F6F6]/94")
+      div(class="max-w-7xl mx-auto px-6")
+        //- Header Row
+        div(class="flex flex-col md:flex-row items-end justify-between mb-12 gap-6")
+          div
+            h2(class="text-primary text-sm font-bold tracking-[0.3em] uppercase mb-4") Visual Journal
+            h3(class="text-4xl font-light") Follow Our Work @E&R_SALON
+          a(class="px-8 py-4 bg-white border border-primary/20 rounded-lg text-sm font-bold uppercase tracking-widest hover:bg-[#CF1745E6] hover:text-white transition-all", href="#") View On Instagram
+    
+        //- Gallery Grid
+        div(class="grid grid-cols-2 md:grid-cols-4 gap-4")
+          +instagramPost("/images/massage.jpg", "Model with elegant hairstyle")
+          +instagramPost("/images/manicure.jpg", "Close up of beauty product bottle")
+          +instagramPost("/images/haircut.jpg", "Stylist working on client's hair")
+          +instagramPost("/images/hair-styling.jpg", "Luxury skincare setup in salon") 

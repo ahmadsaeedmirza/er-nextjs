@@ -1,0 +1,74 @@
+extends adminBase
+
+block content
+    main(class="flex-1 flex flex-col overflow-hidden md:ml-64")
+        header(class="h-16 bg-white border-b border-[#CF17450A] flex items-center justify-between px-8 shrink-0")
+            div(class="flex items-center gap-4")
+                h2(class="text-xl font-bold text-slate-900") Appointments
+
+            div(class="flex items-center gap-4")
+                div(class="relative")
+                    span(class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]")
+                        i(class="fa-solid fa-magnifying-glass")
+                    input(id="appointmentSearch" class="bg-slate-50 border-none rounded-lg pl-10 pr-4 py-2 text-sm w-64 focus:ring-2 focus:ring-[#CF174532]" placeholder="Search appointments..." type="search")
+
+        div(class="flex-1 overflow-y-auto p-8")
+            div(class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8")
+                div
+                    h3(class="text-2xl font-bold text-slate-900 mb-1") Manage Appointments
+                    p(class="text-slate-500 text-sm") View and manage appointment requests, confirmations, and cancellations.
+                button(id="reloadAppointments" type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#CF174514] px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-white")
+                    i(class="fa-solid fa-rotate-right")
+                    | Refresh
+
+            div(class="bg-white rounded-xl border border-[#CF17450A] p-4 mb-6")
+                div(class="flex flex-wrap items-center justify-between gap-3")
+                    div(class="flex flex-col gap-3")
+                        p(class="text-sm text-slate-500") Filter by appointment date 
+                        div(class="flex items-center gap-3")
+                            button(id="appointmentTodayFilter" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-transparent text-slate-600 hover:bg-slate-50 hover:border-[#CF174514] transition-all")
+                                span(class="material-symbols-outlined text-[16px]")
+                                    i(class="fa-solid fa-calendar-day")
+                                | Today
+                            button(id="appointmentUpcomingFilter" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-transparent text-slate-600 hover:bg-slate-50 hover:border-[#CF174514] transition-all")
+                                span(class="material-symbols-outlined text-[16px]")
+                                    i(class="fa-solid fa-calendar-days")
+                                | Upcoming
+                            button(id="appointmentPreviousFilter" type="button" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-transparent text-slate-600 hover:bg-slate-50 hover:border-[#CF174514] transition-all")
+                                span(class="material-symbols-outlined text-[16px]")
+                                    i(class="fa-solid fa-clock-rotate-left")
+                                | Previous
+                    div(class="flex flex-col gap-3")
+                        p(class="text-sm text-slate-500") Filter by appointment status
+                        div(id="appointmentStatusFilters" class="flex border-b border-[#CF174505] flex-wrap")
+                            each tab in [{label:'All', value:'all', active:true}, {label:'Pending', value:'Pending', active:false}, {label:'Confirmed', value:'Confirmed', active:false}, {label:'Cancelled', value:'Cancelled', active:false}]
+                                button(type="button" data-status-filter=tab.value class=`px-4 py-2 border-b-2 text-sm font-medium transition-all ${tab.active ? 'border-[#CF1745] text-[#CF1745] font-bold' : 'border-transparent text-slate-500 hover:text-[#CF1745]'}`)= tab.label
+
+            div(class="bg-white rounded-xl border border-[#CF17450A] overflow-hidden shadow-sm")
+                div(class="overflow-x-auto")
+                    table(class="w-full text-left border-collapse")
+                        thead
+                            tr(class="bg-[#CF174505] border-b border-[#CF17450A] text-slate-600")
+                                each header in ['Client', 'Service', 'Date & Time', 'Contact', 'Status']
+                                    th(class="px-6 py-4 text-xs font-bold uppercase tracking-wider")= header
+                                th(class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-right") Actions
+
+                        tbody(id="appointmentTableBody" class="divide-y divide-[#CF174505]")
+                            tr
+                                td(colspan="6" class="px-6 py-10 text-center text-sm text-slate-500") Loading appointments...
+
+                div(class="px-6 py-4 bg-[#CF174505] border-t border-[#CF17450A] flex flex-col gap-3 md:flex-row md:items-center md:justify-between")
+                    p(id="appointmentPaginationSummary" class="text-xs text-slate-500") Loading appointments...
+                    div(class="flex gap-1")
+                        button(id="appointmentPrevPage" type="button" class="size-8 flex items-center justify-center rounded border border-[#CF17450A] text-slate-400 hover:bg-white transition-colors")
+                            span(class="material-symbols-outlined text-[18px]")
+                                i(class="fa-solid fa-chevron-left")
+                        div(id="appointmentPaginationNumbers" class="flex gap-1")
+                        button(id="appointmentNextPage" type="button" class="size-8 flex items-center justify-center rounded border border-[#CF17450A] text-slate-400 hover:bg-white transition-colors")
+                            span(class="material-symbols-outlined text-[18px]")
+                                i(class="fa-solid fa-chevron-right")
+
+    div(id="toast" class="fixed bottom-6 right-6 z-50 rounded-lg px-4 py-3 text-sm font-semibold text-white opacity-0 transition-opacity duration-300 bg-[#CF1745] pointer-events-none")
+
+block scripts
+    script(src='/js/manageAppointment.js')
