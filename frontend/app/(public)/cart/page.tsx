@@ -16,11 +16,7 @@ interface CartItem {
 
 interface ShippingFormData {
   fullName: string;
-  streetAddress: string;
-  apartment: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  email: string;
   phone: string;
 }
 
@@ -119,16 +115,16 @@ export default function CartPage() {
     setIsSubmitting(true);
     try {
       const orderData = {
-        items: cartItems,
-        shippingAddress: shippingData,
-        subtotal,
-        tax,
-        grandTotal,
-        orderDate: new Date().toISOString(),
+        customerName: shippingData.fullName,
+        customerEmail: shippingData.email,
+        items: cartItems.map((item) => ({
+          product: item.productId,
+          quantity: item.quantity,
+        })),
+        totalPrice: grandTotal,
       };
 
-      // Replace with actual API endpoint once the orders API is ready
-      const response = await fetch(`${apiUrl}/api/v1/orders`, {
+      const response = await fetch(`${apiUrl}/api/v1/orders/checkout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

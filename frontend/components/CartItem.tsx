@@ -147,10 +147,6 @@ const CartItem: React.FC<CartItemProps> = ({
 
         <div className="w-2/4">
           <h3 className="font-bold text-lg">{name}</h3>
-          <p className="text-sm font-semibold text-[#CF1745]/90">
-            2 to 5 Business Days
-          </p>
-          <p className="text-xs text-gray-400 mt-1">{detail}</p>
         </div>
 
         <div className="flex justify-end w-1/4">

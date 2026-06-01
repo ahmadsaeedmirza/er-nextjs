@@ -4,11 +4,7 @@ import React, { FormEvent, useState } from "react";
 
 interface ShippingFormData {
   fullName: string;
-  streetAddress: string;
-  apartment: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  email: string;
   phone: string;
 }
 
@@ -17,121 +13,11 @@ interface ShippingFormProps {
   isLoading?: boolean;
 }
 
-const US_STATES = [
-  "AL",
-  "AK",
-  "AZ",
-  "AR",
-  "CA",
-  "CO",
-  "CT",
-  "DE",
-  "FL",
-  "GA",
-  "HI",
-  "ID",
-  "IL",
-  "IN",
-  "IA",
-  "KS",
-  "KY",
-  "LA",
-  "ME",
-  "MD",
-  "MA",
-  "MI",
-  "MN",
-  "MS",
-  "MO",
-  "MT",
-  "NE",
-  "NV",
-  "NH",
-  "NJ",
-  "NM",
-  "NY",
-  "NC",
-  "ND",
-  "OH",
-  "OK",
-  "OR",
-  "PA",
-  "RI",
-  "SC",
-  "SD",
-  "TN",
-  "TX",
-  "UT",
-  "VT",
-  "VA",
-  "WA",
-  "WV",
-  "WI",
-  "WY",
-];
-
-const STATE_NAMES: Record<string, string> = {
-  AL: "Alabama",
-  AK: "Alaska",
-  AZ: "Arizona",
-  AR: "Arkansas",
-  CA: "California",
-  CO: "Colorado",
-  CT: "Connecticut",
-  DE: "Delaware",
-  FL: "Florida",
-  GA: "Georgia",
-  HI: "Hawaii",
-  ID: "Idaho",
-  IL: "Illinois",
-  IN: "Indiana",
-  IA: "Iowa",
-  KS: "Kansas",
-  KY: "Kentucky",
-  LA: "Louisiana",
-  ME: "Maine",
-  MD: "Maryland",
-  MA: "Massachusetts",
-  MI: "Michigan",
-  MN: "Minnesota",
-  MS: "Mississippi",
-  MO: "Missouri",
-  MT: "Montana",
-  NE: "Nebraska",
-  NV: "Nevada",
-  NH: "New Hampshire",
-  NJ: "New Jersey",
-  NM: "New Mexico",
-  NY: "New York",
-  NC: "North Carolina",
-  ND: "North Dakota",
-  OH: "Ohio",
-  OK: "Oklahoma",
-  OR: "Oregon",
-  PA: "Pennsylvania",
-  RI: "Rhode Island",
-  SC: "South Carolina",
-  SD: "South Dakota",
-  TN: "Tennessee",
-  TX: "Texas",
-  UT: "Utah",
-  VT: "Vermont",
-  VA: "Virginia",
-  WA: "Washington",
-  WV: "West Virginia",
-  WI: "Wisconsin",
-  WY: "Wyoming",
-};
-
 const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
   ({ onSubmit, isLoading = false }, ref) => {
     const [formData, setFormData] = useState<ShippingFormData>({
       fullName: "",
-      streetAddress: "",
-      apartment: "",
-      city: "",
-      state: "",
-      zipCode: "",
+      email: "",
       phone: "",
     });
 
@@ -143,17 +29,10 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
       if (!formData.fullName.trim()) {
         newErrors.fullName = "Full name is required";
       }
-      if (!formData.streetAddress.trim()) {
-        newErrors.streetAddress = "Street address is required";
-      }
-      if (!formData.city.trim()) {
-        newErrors.city = "City is required";
-      }
-      if (!formData.state) {
-        newErrors.state = "State is required";
-      }
-      if (!formData.zipCode.match(/^[0-9]{5}(-[0-9]{4})?$/)) {
-        newErrors.zipCode = "ZIP code must be 5 digits";
+      if (!formData.email.trim()) {
+        newErrors.email = "Email address is required";
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email address";
       }
       if (!formData.phone.trim()) {
         newErrors.phone = "Phone number is required";
@@ -163,9 +42,7 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
       return Object.keys(newErrors).length === 0;
     };
 
-    const handleChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-    ) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
       setFormData((prev) => ({
         ...prev,
@@ -188,152 +65,88 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
     };
 
     return (
-      <div className="flex-1 bg-[#E7E5E4]/60 shadow-2xl text-black bg-white rounded-xl p-16">
-        <h2 className="text-xl font-bold mb-6">Shipping Information</h2>
+      <div className="flex-1 bg-white border border-slate-100 shadow-sm rounded-2xl p-8 text-black">
+        <h2 className="text-2xl font-bold mb-2 text-slate-900">Pickup Details</h2>
+        <p className="text-slate-500 text-sm mb-6 leading-relaxed">
+          E & R Salon operates on a **pickup-only** basis. Please enter your contact information below. You will receive an email notification when your order is ready for pickup at our salon.
+        </p>
+
+        {/* Info Alert Box */}
+        <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-4 mb-6 text-amber-800 text-xs flex gap-3 items-start">
+          <i className="fa-solid fa-circle-info text-amber-600 text-base mt-0.5"></i>
+          <div>
+            <p className="font-semibold mb-1 text-amber-900">Pickup Location:</p>
+            <p className="text-amber-800/90 leading-relaxed">
+              E & R Salon, 123 Main Street, Suite A, Los Angeles, CA 90001
+            </p>
+          </div>
+        </div>
+
         <form
           ref={ref}
           onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full"
+          className="space-y-4 w-full"
         >
           {/* Full Name */}
-          <div className="md:col-span-2">
-            <label className="block text-sm text-stone-400 font-medium mb-1">
+          <div>
+            <label className="block text-sm text-slate-500 font-semibold mb-2">
               Full Name
             </label>
             <input
               type="text"
               name="fullName"
+              placeholder="Enter your full name"
               value={formData.fullName}
               onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.fullName ? "border-red-500" : "border-stone-200"
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
+                errors.fullName ? "border-red-500" : "border-slate-200"
               }`}
               required
             />
             {errors.fullName && (
-              <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>
+              <p className="text-red-500 text-xs mt-1.5">{errors.fullName}</p>
             )}
           </div>
 
-          {/* Street Address */}
-          <div className="md:col-span-2">
-            <label className="block text-sm text-stone-400 font-medium mb-1">
-              Street Address
-            </label>
-            <input
-              type="text"
-              name="streetAddress"
-              value={formData.streetAddress}
-              onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.streetAddress ? "border-red-500" : "border-stone-200"
-              }`}
-              required
-            />
-            {errors.streetAddress && (
-              <p className="text-red-500 text-xs mt-1">
-                {errors.streetAddress}
-              </p>
-            )}
-          </div>
-
-          {/* Apartment, Suite (Optional) */}
-          <div className="md:col-span-2">
-            <input
-              type="text"
-              name="apartment"
-              value={formData.apartment}
-              onChange={handleChange}
-              placeholder="Apartment, suite, etc. (optional)"
-              className="w-full border border-stone-200 rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all"
-            />
-          </div>
-
-          {/* City */}
+          {/* Email Address */}
           <div>
-            <label className="block text-sm text-stone-400 font-medium mb-1">
-              City
+            <label className="block text-sm text-slate-500 font-semibold mb-2">
+              Email Address
             </label>
             <input
-              type="text"
-              name="city"
-              value={formData.city}
+              type="email"
+              name="email"
+              placeholder="Enter your email address"
+              value={formData.email}
               onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.city ? "border-red-500" : "border-stone-200"
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
+                errors.email ? "border-red-500" : "border-slate-200"
               }`}
               required
             />
-            {errors.city && (
-              <p className="text-red-500 text-xs mt-1">{errors.city}</p>
-            )}
-          </div>
-
-          {/* State */}
-          <div>
-            <label className="block text-sm text-stone-400 font-medium mb-1">
-              State
-            </label>
-            <select
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.state ? "border-red-500" : "border-stone-200"
-              }`}
-              required
-            >
-              <option value="">Select State</option>
-              {US_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {STATE_NAMES[state]}
-                </option>
-              ))}
-            </select>
-            {errors.state && (
-              <p className="text-red-500 text-xs mt-1">{errors.state}</p>
-            )}
-          </div>
-
-          {/* ZIP Code */}
-          <div>
-            <label className="block text-sm text-stone-400 font-medium mb-1">
-              ZIP Code
-            </label>
-            <input
-              type="text"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              pattern="[0-9]{5}(-[0-9]{4})?"
-              placeholder="12345 or 12345-6789"
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.zipCode ? "border-red-500" : "border-stone-200"
-              }`}
-              required
-            />
-            {errors.zipCode && (
-              <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>
             )}
           </div>
 
           {/* Phone Number */}
           <div>
-            <label className="block text-sm text-stone-400 font-medium mb-1">
+            <label className="block text-sm text-slate-500 font-semibold mb-2">
               Phone Number
             </label>
             <input
               type="tel"
               name="phone"
+              placeholder="(123) 456-7890"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full border rounded-lg px-4 py-4 text-sm focus:ring-1 focus:ring-[#CF1745] focus:border-[#CF1745] transition-all ${
-                errors.phone ? "border-red-500" : "border-stone-200"
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
+                errors.phone ? "border-red-500" : "border-slate-200"
               }`}
               required
             />
             {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              <p className="text-red-500 text-xs mt-1.5">{errors.phone}</p>
             )}
           </div>
         </form>
