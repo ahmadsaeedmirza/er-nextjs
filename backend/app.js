@@ -17,7 +17,6 @@ const appointmentRouter = require("./routes/appointmentRoutes");
 const orderRouter = require("./routes/orderRoutes");
 const productRouter = require("./routes/productRoutes");
 const userRouter = require("./routes/userRoutes");
-const viewRouter = require("./routes/viewRoutes");
 const cartRouter = require("./routes/cartRoutes");
 
 // console.log('DB string is', process.env.DATABASE);
@@ -35,7 +34,6 @@ app.use(
 // app.enable('trust proxy');
 app.set("trust proxy", 1);
 
-app.set("view engine", "pug");
 app.set("views", path.join(__dirname, "views"));
 
 // SERVING STATIC FILES
@@ -178,9 +176,6 @@ app.use("/api/v1/appointments", appointmentRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/admin", userRouter);
 app.use("/api/cart", cartRouter);
-
-// VIEW ROUTES (for server-rendered pages)
-app.use("/", viewRouter);
 
 app.all("/*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this site`, 404));
