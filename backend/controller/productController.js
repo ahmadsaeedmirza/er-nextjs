@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const multer = require("multer");
 const Product = require("./../model/productModel");
 const catchAsync = require("./../utils/catchAsync");
@@ -15,7 +17,7 @@ const multerStorage = multer.diskStorage({
       .toLowerCase()
       .replace(/ /g, "-")
       .replace(/[^a-z0-9-]/g, "");
-    cb(null, `${slug}.jpg`);
+    cb(null, `${slug}-${Date.now()}.jpg`);
   },
 });
 
@@ -34,8 +36,64 @@ exports.addPhotoToBody = (req, res, next) => {
 exports.addProduct = factory.createOne(Product);
 exports.getProduct = factory.getOne(Product);
 exports.getAllProducts = factory.getAll(Product);
-exports.deleteProduct = factory.deleteOne(Product);
-exports.updateProduct = factory.updateOne(Product);
+
+exports.deleteProduct = catchAsync(async (req, res, next) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) {
+    return next(new AppError("No product found with this ID", 404));
+  }
+
+  // Delete the image file if it exists
+  if (product.productImage) {
+    const imagePath = path.join(__dirname, "..", "public", "images", "products", product.productImage);
+    fs.unlink(imagePath, (err) => {
+      if (err) console.error(`Failed to delete image: ${imagePath}`, err);
+    });
+  }
+
+  await Product.findByIdAndDelete(req.params.id);
+
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+});
+
+exports.updateProduct = catchAsync(async (req, res, next) => {
+  // If a new photo is uploaded, delete the old one
+  if (req.file) {
+    const oldProduct = await Product.findById(req.params.id);
+    if (oldProduct && oldProduct.productImage) {
+      const oldImagePath = path.join(
+        __dirname,
+        "..",
+        "public",
+        "images",
+        "products",
+        oldProduct.productImage
+      );
+      fs.unlink(oldImagePath, (err) => {
+        if (err) console.error(`Failed to delete old image: ${oldImagePath}`, err);
+      });
+    }
+  }
+
+  const doc = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    returnDocument: "after",
+    runValidators: true,
+  });
+
+  if (!doc) {
+    return next(new AppError("No document found with this ID", 404));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      data: doc,
+    },
+  });
+});
 
 exports.getProductBySlug = catchAsync(async (req, res, next) => {
   const product = await Product.findOne({

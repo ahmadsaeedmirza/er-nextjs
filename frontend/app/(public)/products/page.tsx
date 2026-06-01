@@ -100,7 +100,7 @@ export default function Products() {
         setLoading(true);
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${apiUrl}/api/v1/products`, {
+        const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
           method: "GET",
           credentials: "include",
           headers: {

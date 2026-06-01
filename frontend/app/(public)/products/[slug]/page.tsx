@@ -69,7 +69,7 @@ async function fetchProduct(slug: string) {
     }
 
     // Fallback: fetch all products and find by slug
-    const fallbackResponse = await fetch(`${apiUrl}/api/v1/products`, {
+    const fallbackResponse = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
