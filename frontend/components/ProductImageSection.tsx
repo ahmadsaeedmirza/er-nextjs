@@ -12,14 +12,13 @@ export default function ProductImageSection({
   isOutOfStock,
 }: ProductImageSectionProps) {
   return (
-    <div className="w-full md:w-2/3">
-      <div className="relative">
+    <div className="w-full md:w-1/2">
+      <div className="relative aspect-[4/5] w-full">
         <Image
           src={src}
           alt={alt}
-          width={600}
-          height={500}
-          className="w-full h-[500px] rounded-lg object-cover"
+          fill
+          className="rounded-lg object-cover"
         />
         {isOutOfStock && (
           <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-3 py-1 uppercase tracking-widest">

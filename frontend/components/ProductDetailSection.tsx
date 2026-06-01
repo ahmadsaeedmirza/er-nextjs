@@ -73,7 +73,7 @@ export default function ProductDetailSection({
   };
 
   return (
-    <div className="w-full md:w-1/3 flex flex-col justify-center">
+    <div className="w-full md:w-1/2 flex flex-col justify-center">
       <h2 className="text-3xl font-bold text-slate-900 capitalize mb-4">
         {name}
       </h2>

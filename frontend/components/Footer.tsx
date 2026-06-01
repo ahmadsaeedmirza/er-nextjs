@@ -128,12 +128,12 @@ export default function Footer() {
           <p className="text-xs text-slate-400 uppercase tracking-widest">
             © 2026 E & R Salon. ALL RIGHTS RESERVED. POWERED BY{" "}
             <a
-              href="https://www.linkedin.com/in/ahmad-saeed-057a952a1/"
+              href="https://www.devitytechnologies.com/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener"
               className="underline"
             >
-              Ahmad Saeed
+              Devity Technologies
             </a>
           </p>
           <div className="flex gap-6">

@@ -460,7 +460,10 @@ export default function AddEditProductPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleImageDrop}
             >
-              <div className="w-full aspect-[21/9] bg-slate-100 rounded-lg overflow-hidden border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-[#CF1745] transition-all relative">
+              <div 
+                onClick={() => document.getElementById("productImageInput")?.click()}
+                className="w-full aspect-[21/9] bg-slate-100 rounded-lg overflow-hidden border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-[#CF1745] transition-all relative cursor-pointer"
+              >
                 {/* Image Preview */}
                 {imagePreview && (
                   <div
@@ -494,20 +497,7 @@ export default function AddEditProductPage() {
                 name="productImage"
                 accept="image/*"
                 onChange={handleImageChange}
-                onClick={(e) => {
-                  const div = document.querySelector(
-                    "[onDragOver]",
-                  ) as HTMLDivElement;
-                  if (div) div.click();
-                }}
                 className="hidden"
-              />
-
-              <div
-                onClick={() =>
-                  document.getElementById("productImageInput")?.click()
-                }
-                className="absolute inset-0 z-0 cursor-pointer"
               />
             </div>
           </section>
