@@ -82,17 +82,14 @@ const mockProducts: Product[] = [
   },
 ];
 
-const categories = [
-  { name: "Hair Care", count: 12 },
-  { name: "Styling & Finish", count: 8 },
-  { name: "Treatments", count: 5 },
-  { name: "Tools", count: 3 },
-];
-
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("default");
+  const [availability, setAvailability] = useState("all");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -139,7 +136,39 @@ export default function Products() {
     fetchProducts();
   }, []);
 
-  const displayProducts = products && products.length > 0 ? products : [];
+  // Filter products in memory
+  const filteredProducts = products.filter((product) => {
+    // 1. Search term filter
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // 2. Availability filter
+    const matchesAvailability =
+      availability === "all" ||
+      (availability === "in-stock" && product.stockQuantity > 0);
+
+    return matchesSearch && matchesAvailability;
+  });
+
+  // Sort products in memory
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    if (sortBy === "price-low-high") {
+      return a.price - b.price;
+    }
+    if (sortBy === "price-high-low") {
+      return b.price - a.price;
+    }
+    if (sortBy === "name-a-z") {
+      return a.name.localeCompare(b.name);
+    }
+    if (sortBy === "name-z-a") {
+      return b.name.localeCompare(a.name);
+    }
+    return 0;
+  });
+
+  const displayProducts = sortedProducts;
 
   return (
     <div>
@@ -151,7 +180,14 @@ export default function Products() {
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="flex flex-col md:flex-row gap-8">
             {/* SIDEBAR FILTERS */}
-            <FilterSidebar categories={categories} />
+            <FilterSidebar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              availability={availability}
+              onAvailabilityChange={setAvailability}
+            />
 
             {/* PRODUCTS GRID */}
             <div className="flex-1">

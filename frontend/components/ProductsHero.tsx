@@ -17,26 +17,6 @@ export default function ProductsHero() {
           Elevate your daily beauty ritual with our hand-selected range of
           premium, high-performance essentials.
         </p>
-        <div className="flex flex-wrap justify-center gap-4 txt-black">
-          <Link
-            href="#hairCare"
-            className="px-6 py-2 text-black rounded-full border border-[#cf1745]/20 hover:bg-[#cf1745]/10 transition-colors text-sm font-medium"
-          >
-            Hair Care
-          </Link>
-          <Link
-            href="#skinCare"
-            className="px-6 py-2 text-black rounded-full border border-[#cf1745]/20 hover:bg-[#cf1745]/10 transition-colors text-sm font-medium"
-          >
-            Skin Care
-          </Link>
-          <Link
-            href="#nailCare"
-            className="px-6 py-2 text-black rounded-full border border-[#cf1745]/20 hover:bg-[#cf1745]/10 transition-colors text-sm font-medium"
-          >
-            Nail Care
-          </Link>
-        </div>
       </div>
     </section>
   );

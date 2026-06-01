@@ -84,8 +84,8 @@ export default function ProductCardItem({
         </div>
       )}
 
-      <div className="group">
-        <Link href={`/products/${slug}`}>
+      <div className="group flex flex-col h-full">
+        <Link href={`/products/${slug}`} className="block">
           <div className="relative aspect-[4/5] bg-white mb-6 overflow-hidden rounded-lg">
             <Image
               src={`/images/products/${productImage}`}
@@ -100,19 +100,19 @@ export default function ProductCardItem({
             )}
           </div>
         </Link>
-        <div className="text-center space-y-4">
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-widest mb-1 text-slate-900">
+        <div className="flex-1 flex flex-col justify-between text-center">
+          <div className="flex-1 flex flex-col justify-between mb-4">
+            <h3 className="text-sm font-bold uppercase tracking-widest mb-2 text-slate-900 line-clamp-2 min-h-[40px] flex items-center justify-center">
               {name}
             </h3>
-            <p className="text-[#CF1745] font-mono">
+            <p className="text-[#CF1745] font-mono mt-auto">
               ${Number(price).toFixed(2)}
             </p>
           </div>
           <button
             onClick={handleAddToCart}
             disabled={stockQuantity === 0 || isAdding}
-            className={`px-6 py-3 rounded-full text-[12px] font-semibold uppercase tracking-widest w-full transition-all ${
+            className={`px-6 py-3 rounded-full text-[12px] font-semibold uppercase tracking-widest w-full transition-all mt-auto ${
               stockQuantity === 0
                 ? "bg-gray-400 text-white cursor-not-allowed"
                 : "bg-[#CF1745] text-white cursor-pointer hover:scale-105 disabled:opacity-50"
