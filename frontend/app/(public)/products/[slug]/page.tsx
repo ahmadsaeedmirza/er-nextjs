@@ -1,5 +1,6 @@
 import ProductImageSection from "@/components/ProductImageSection";
 import ProductDetailSection from "@/components/ProductDetailSection";
+import ProductCardItem from "@/components/ProductCardItem";
 
 // Mock product data - Fallback only
 const mockProducts: Record<string, any> = {
@@ -98,6 +99,40 @@ async function fetchProduct(slug: string) {
   }
 }
 
+async function fetchRecommendations(currentProductId: string) {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      next: { revalidate: 0 },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const products = data.data?.data || [];
+
+      // Filter out current product and hidden products
+      const eligible = products.filter(
+        (p: any) => p._id !== currentProductId && !p.isHidden
+      );
+
+      // Select 3 random products
+      const shuffled = [...eligible].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, 3).map((p: any) => ({
+        ...p,
+        id: p._id,
+      }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    return [];
+  }
+}
+
 export default async function ProductOnePage({ params }: ProductOnePageProps) {
   const { slug } = await params;
 
@@ -128,6 +163,9 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
     );
   }
 
+  // Fetch 3 random recommendations
+  const recommendations = await fetchRecommendations(product.id || product._id);
+
   return (
     <section className="max-w-7xl bg-white mx-auto px-6 pb-24 pt-[169px]">
       <div className="flex flex-col md:flex-row gap-12">
@@ -146,6 +184,29 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
           productImage={product.productImage}
         />
       </div>
+
+      {/* YOU MAY ALSO LIKE SECTION */}
+      {recommendations.length > 0 && (
+        <div className="mt-24 border-t border-slate-100 pt-16">
+          <h2 className="text-2xl font-bold uppercase tracking-widest text-slate-900 mb-10 text-center">
+            You May Also Like
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {recommendations.map((prod: any) => (
+              <ProductCardItem
+                key={prod.id || prod._id}
+                id={prod.id || prod._id}
+                slug={prod.slug}
+                name={prod.name}
+                price={prod.price}
+                description={prod.description}
+                productImage={prod.productImage}
+                stockQuantity={prod.stockQuantity}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
