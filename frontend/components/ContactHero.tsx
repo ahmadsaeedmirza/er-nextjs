@@ -22,9 +22,11 @@ export default function ContactHero() {
                 Our Location
               </h3>
               <p className="text-lg">
-                1221 Avenue of the Americas
-                <br />
-                New York, NY 10020
+                <span>
+                  3180 Colima Rd Suite F,
+                  <br />
+                  Hacienda Heights, CA 91745
+                </span>
               </p>
               <a
                 className="text-xs font-bold uppercase tracking-widest text-[#CF1745]/60 hover:text-[#CF1745] mt-2 inline-block transition-colors"
@@ -46,10 +48,7 @@ export default function ContactHero() {
               <h3 className="text-xs font-bold uppercase tracking-widest text-primary mb-1">
                 Reservation Desk
               </h3>
-              <p className="text-lg">+1 (212) 555-0198</p>
-              <p className="text-stone-400 text-sm italic">
-                Mon - Sat: 9am to 8pm
-              </p>
+              <p className="text-lg">+1 (626) 333-6814</p>
             </div>
           </div>
 
@@ -62,7 +61,7 @@ export default function ContactHero() {
               <h3 className="text-xs font-bold uppercase tracking-widest text-primary mb-1">
                 General Inquiries
               </h3>
-              <p className="text-lg">concierge@marbleluxe.com</p>
+              <p className="text-lg">esterandricsalon@gmail.com</p>
             </div>
           </div>
         </div>

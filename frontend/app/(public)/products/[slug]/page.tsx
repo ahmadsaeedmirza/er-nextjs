@@ -1,48 +1,28 @@
 import ProductImageSection from "@/components/ProductImageSection";
 import ProductDetailSection from "@/components/ProductDetailSection";
 import ProductCardItem from "@/components/ProductCardItem";
+import Link from "next/link";
 
-// Mock product data - Fallback only
-const mockProducts: Record<string, any> = {
-  "signature-serum": {
-    _id: "1",
-    id: "1",
-    slug: "signature-serum",
-    name: "Signature Hair Serum",
-    description:
-      "Our premium hair serum is formulated with natural oils and essential nutrients to provide deep nourishment and shine to your hair. Reduces frizz, strengthens hair, and provides UV protection. Perfect for all hair types.",
-    price: 45.99,
-    productImage: "shampoo.jpg",
-    stockQuantity: 10,
-  },
-  "hydrating-mask": {
-    _id: "2",
-    id: "2",
-    slug: "hydrating-mask",
-    name: "Hydrating Mask",
-    description:
-      "Deep moisture treatment designed for all hair types. This luxurious mask penetrates the hair shaft to restore moisture, elasticity, and shine. Use once weekly for best results.",
-    price: 35.99,
-    productImage: "shampoo.jpg",
-    stockQuantity: 15,
-  },
-  "color-protection": {
-    _id: "3",
-    id: "3",
-    slug: "color-protection",
-    name: "Color Protection Spray",
-    description:
-      "UV protection spray that shields color-treated hair from sun damage and fading. Lightweight formula with anti-humidity technology. Apply before sun exposure.",
-    price: 28.99,
-    productImage: "shampoo.jpg",
-    stockQuantity: 0,
-  },
-};
+
 
 interface ProductOnePageProps {
   params: Promise<{
     slug: string;
   }>;
+}
+
+interface Product {
+  _id: string;
+  id?: string;
+  slug: string;
+  name: string;
+  price: number;
+  description: string;
+  productImage: string;
+  stockQuantity: number;
+  isHidden?: boolean;
+  discount?: number;
+  additionalImages?: string[];
 }
 
 async function fetchProduct(slug: string) {
@@ -81,7 +61,7 @@ async function fetchProduct(slug: string) {
       const fallbackData = await fallbackResponse.json();
       const products = fallbackData.data?.data || [];
       const foundProduct = products.find(
-        (p: any) => p.slug === slug && !p.isHidden,
+        (p: Product) => p.slug === slug && !p.isHidden,
       );
 
       if (foundProduct) {
@@ -116,12 +96,12 @@ async function fetchRecommendations(currentProductId: string) {
 
       // Filter out current product and hidden products
       const eligible = products.filter(
-        (p: any) => p._id !== currentProductId && !p.isHidden
+        (p: Product) => p._id !== currentProductId && !p.isHidden
       );
 
       // Select 3 random products
       const shuffled = [...eligible].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, 3).map((p: any) => ({
+      return shuffled.slice(0, 3).map((p: Product) => ({
         ...p,
         id: p._id,
       }));
@@ -137,12 +117,7 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
   const { slug } = await params;
 
   // Try to fetch from backend
-  let product = await fetchProduct(slug);
-
-  // Fall back to mock data if backend fetch fails
-  if (!product) {
-    product = mockProducts[slug];
-  }
+  const product = await fetchProduct(slug);
 
   if (!product) {
     return (
@@ -150,14 +125,14 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
           <p className="text-slate-600">
-            Sorry, we couldn't find the product you're looking for.
+            {"Sorry, we couldn't find the product you're looking for."}
           </p>
-          <a
+          <Link
             href="/products"
             className="mt-6 inline-block px-6 py-3 bg-[#CF1745] text-white rounded-lg font-semibold hover:scale-105 transition-transform"
           >
             Back to Products
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -193,7 +168,7 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
             You May Also Like
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recommendations.map((prod: any) => (
+            {recommendations.map((prod: Product) => (
               <ProductCardItem
                 key={prod.id || prod._id}
                 id={prod.id || prod._id}

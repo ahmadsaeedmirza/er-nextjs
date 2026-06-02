@@ -133,14 +133,8 @@ export default function CartPage() {
       const result = await response.json();
       console.log("Order placed successfully:", result);
 
-      showToast("Order placed successfully!", "success");
-      // Clear cart after successful order
-      setCartItems([]);
-
-      // Redirect to confirmation page after a delay
-      setTimeout(() => {
-        window.location.href = "/orderConfirmation";
-      }, 2000);
+      // Redirect to confirmation page immediately
+      window.location.href = "/orderConfirmation";
     } catch (error) {
       console.error("Error placing order:", error);
       showToast(

@@ -81,18 +81,18 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <i className="fa-solid fa-location-dot mt-1 text-primary"></i>
                 <span>
-                  124 Madison Avenue
+                  3180 Colima Rd Suite F,
                   <br />
-                  New York, NY 10016
+                  Hacienda Heights, CA 91745
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <i className="fa-solid fa-phone text-primary"></i>
-                <span>+1 (212) 555-0198</span>
+                <span>+1 (626) 333-6814</span>
               </li>
               <li className="flex items-center gap-3">
                 <i className="fa-regular fa-envelope text-primary"></i>
-                <span>contact@eandrsalon.com</span>
+                <span>esterandricsalon@gmail.com</span>
               </li>
             </ul>
           </div>

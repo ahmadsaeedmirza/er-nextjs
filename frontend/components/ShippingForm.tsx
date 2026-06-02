@@ -68,7 +68,7 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
       <div className="flex-1 bg-white border border-slate-100 shadow-sm rounded-2xl p-8 text-black">
         <h2 className="text-2xl font-bold mb-2 text-slate-900">Pickup Details</h2>
         <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-          E & R Salon operates on a **pickup-only** basis. Please enter your contact information below. You will receive an email notification when your order is ready for pickup at our salon.
+          E & R Salon operates on a **pickup-only** basis. Please enter your contact information below.
         </p>
 
         {/* Info Alert Box */}
@@ -77,7 +77,16 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
           <div>
             <p className="font-semibold mb-1 text-amber-900">Pickup Location:</p>
             <p className="text-amber-800/90 leading-relaxed">
-              E & R Salon, 123 Main Street, Suite A, Los Angeles, CA 90001
+              3180 Colima Rd Suite F, Hacienda Heights, CA 91745
+              <br />
+              <a
+                className="text-xs font-bold uppercase tracking-widest text-[#CF1745]/60 hover:text-[#CF1745] mt-2 inline-block transition-colors"
+                href="https://maps.app.goo.gl/QrYeabnGPKS1rkV6A"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View on Google Maps
+              </a>
             </p>
           </div>
         </div>
@@ -98,9 +107,8 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
               placeholder="Enter your full name"
               value={formData.fullName}
               onChange={handleChange}
-              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
-                errors.fullName ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${errors.fullName ? "border-red-500" : "border-slate-200"
+                }`}
               required
             />
             {errors.fullName && (
@@ -119,9 +127,8 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
               placeholder="Enter your email address"
               value={formData.email}
               onChange={handleChange}
-              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
-                errors.email ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${errors.email ? "border-red-500" : "border-slate-200"
+                }`}
               required
             />
             {errors.email && (
@@ -140,9 +147,8 @@ const ShippingForm = React.forwardRef<HTMLFormElement, ShippingFormProps>(
               placeholder="(123) 456-7890"
               value={formData.phone}
               onChange={handleChange}
-              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${
-                errors.phone ? "border-red-500" : "border-slate-200"
-              }`}
+              className={`w-full border rounded-xl px-4 py-3.5 text-slate-900 bg-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] outline-none transition-all ${errors.phone ? "border-red-500" : "border-slate-200"
+                }`}
               required
             />
             {errors.phone && (

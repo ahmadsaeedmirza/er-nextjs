@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "E & R Salon - Premium Beauty Services",
   description:
-    "Luxury salon offering hair, beauty, and appointment services. Premium salon experience in New York.",
+    "Luxury salon offering hair, beauty, and appointment services. Premium salon experience in California.",
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 "use client";
  
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 
@@ -68,7 +68,7 @@ export default function ManageAppointmentsPage() {
   const playNotificationSound = () => {
     if (typeof window === "undefined") return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
       const audioCtx = new AudioContextClass();
       
@@ -98,58 +98,35 @@ export default function ManageAppointmentsPage() {
     }
   };
 
-  // Load appointments on mount
-  useEffect(() => {
-    loadAppointments();
-  }, []);
+  const handleLoadError = (error: unknown) => {
+    let errorMessage = "Unable to load appointments. Please try again.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === "object" && error !== null && "message" in error) {
+      errorMessage = String((error as { message: unknown }).message);
+    }
 
-  // Socket.io integration
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const socket = io(apiUrl, {
-      withCredentials: true,
-    });
+    setState((prev) => ({
+      ...prev,
+      isLoading: false,
+      error: errorMessage,
+    }));
+  };
 
-    socket.on("connect", () => {
-      setIsConnected(true);
-      console.log("Connected to appointments socket server");
-    });
+  const normalizeAppointment = (
+    appointment: Appointment,
+  ): NormalizedAppointment => {
+    const appointmentDate = new Date(appointment.appointmentDate);
+    const dateTime = mergeDateAndTime(appointmentDate, appointment.timeSlot);
 
-    socket.on("disconnect", () => {
-      setIsConnected(false);
-      console.log("Disconnected from appointments socket server");
-    });
-
-    socket.on("appointmentCreated", (appt: any) => {
-      showToast(`New Appointment: ${appt.customerName || "Client"}`);
-      playNotificationSound();
-      loadAppointments(false, true); // silent = true
-    });
-
-    socket.on("appointmentUpdated", () => {
-      loadAppointments(false, true);
-    });
-
-    socket.on("appointmentDeleted", () => {
-      loadAppointments(false, true);
-    });
-
-    return () => {
-      socket.disconnect();
+    return {
+      ...appointment,
+      id: appointment._id,
+      dateTime,
+      formattedDate: formatDate(appointmentDate),
+      formattedTime: formatTime(appointment.timeSlot),
     };
-  }, []);
-
-  // Apply filters whenever state changes
-  useEffect(() => {
-    applyFilters();
-  }, [
-    state.appointments,
-    state.statusFilter,
-    state.todayOnly,
-    state.upcomingOnly,
-    state.previousOnly,
-    state.searchTerm,
-  ]);
+  };
 
   const loadAppointments = useCallback(async (showRefreshToast = false, silent = false) => {
     if (!silent) {
@@ -197,105 +174,53 @@ export default function ManageAppointmentsPage() {
     }
   }, [router]);
 
-  const normalizeAppointment = (
-    appointment: Appointment,
-  ): NormalizedAppointment => {
-    const appointmentDate = new Date(appointment.appointmentDate);
-    const dateTime = mergeDateAndTime(appointmentDate, appointment.timeSlot);
-
-    return {
-      ...appointment,
-      id: appointment._id,
-      dateTime,
-      formattedDate: formatDate(appointmentDate),
-      formattedTime: formatTime(appointment.timeSlot),
-    };
-  };
-
-  const handleLoadError = (error: any) => {
-    const errorMessage =
-      error?.message || "Unable to load appointments. Please try again.";
-
-    setState((prev) => ({
-      ...prev,
-      isLoading: false,
-      error: errorMessage,
-    }));
-  };
-
-  const matchesStatusFilter = (appointment: NormalizedAppointment): boolean => {
-    if (state.statusFilter === "all") {
-      return true;
-    }
-    return appointment.status === state.statusFilter;
-  };
-
-  const matchesTodayFilter = (appointment: NormalizedAppointment): boolean => {
-    if (!state.todayOnly) {
-      return true;
-    }
-
-    const today = new Date();
-    const appointmentDate = new Date(appointment.dateTime);
-
-    return (
-      appointmentDate.getFullYear() === today.getFullYear() &&
-      appointmentDate.getMonth() === today.getMonth() &&
-      appointmentDate.getDate() === today.getDate()
-    );
-  };
-
-  const matchesUpcomingFilter = (
-    appointment: NormalizedAppointment,
-  ): boolean => {
-    if (!state.upcomingOnly) {
-      return true;
-    }
-
-    const now = new Date();
-    return appointment.dateTime >= now;
-  };
-
-  const matchesPreviousFilter = (
-    appointment: NormalizedAppointment,
-  ): boolean => {
-    if (!state.previousOnly) {
-      return true;
-    }
-
-    const now = new Date();
-    return appointment.dateTime < now;
-  };
-
-  const matchesSearch = (appointment: NormalizedAppointment): boolean => {
-    if (!state.searchTerm) {
-      return true;
-    }
-
-    const haystack = [
-      appointment.customerName,
-      appointment.customerEmail,
-      appointment.whatsappNumber,
-      appointment.service,
-      appointment.status,
-      appointment.formattedDate,
-      appointment.formattedTime,
-    ]
-      .join(" ")
-      .toLowerCase();
-
-    return haystack.includes(state.searchTerm.toLowerCase());
-  };
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     const filtered = state.appointments.filter((appointment) => {
-      return (
-        matchesTodayFilter(appointment) &&
-        matchesUpcomingFilter(appointment) &&
-        matchesPreviousFilter(appointment) &&
-        matchesStatusFilter(appointment) &&
-        matchesSearch(appointment)
-      );
+      // 1. Today filter
+      if (state.todayOnly) {
+        const today = new Date();
+        const appointmentDate = new Date(appointment.dateTime);
+        const isToday =
+          appointmentDate.getFullYear() === today.getFullYear() &&
+          appointmentDate.getMonth() === today.getMonth() &&
+          appointmentDate.getDate() === today.getDate();
+        if (!isToday) return false;
+      }
+
+      // 2. Upcoming filter
+      if (state.upcomingOnly) {
+        const now = new Date();
+        if (appointment.dateTime < now) return false;
+      }
+
+      // 3. Previous filter
+      if (state.previousOnly) {
+        const now = new Date();
+        if (appointment.dateTime >= now) return false;
+      }
+
+      // 4. Status filter
+      if (state.statusFilter !== "all") {
+        if (appointment.status !== state.statusFilter) return false;
+      }
+
+      // 5. Search filter
+      if (state.searchTerm) {
+        const haystack = [
+          appointment.customerName,
+          appointment.customerEmail,
+          appointment.whatsappNumber,
+          appointment.service,
+          appointment.status,
+          appointment.formattedDate,
+          appointment.formattedTime,
+        ]
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(state.searchTerm.toLowerCase())) return false;
+      }
+
+      return true;
     });
 
     setState((prev) => {
@@ -311,7 +236,60 @@ export default function ManageAppointmentsPage() {
         currentPage,
       };
     });
-  };
+  }, [
+    state.appointments,
+    state.statusFilter,
+    state.todayOnly,
+    state.upcomingOnly,
+    state.previousOnly,
+    state.searchTerm,
+  ]);
+
+  // Load appointments on mount
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  // Socket.io integration
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const socket = io(apiUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      console.log("Connected to appointments socket server");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      console.log("Disconnected from appointments socket server");
+    });
+
+    socket.on("appointmentCreated", (appt: Appointment) => {
+      showToast(`New Appointment: ${appt.customerName || "Client"}`);
+      playNotificationSound();
+      loadAppointments(false, true); // silent = true
+    });
+
+    socket.on("appointmentUpdated", () => {
+      loadAppointments(false, true);
+    });
+
+    socket.on("appointmentDeleted", () => {
+      loadAppointments(false, true);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [loadAppointments]);
+
+  // Apply filters whenever state changes
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const handleStatusUpdate = useCallback(
     async (appointmentId: string, nextStatus: "Confirmed" | "Cancelled") => {
@@ -772,7 +750,7 @@ function renderPaginationButtons(
 
   const maxButtons = 5;
   let startPage = Math.max(1, currentPage - 2);
-  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+  const endPage = Math.min(totalPages, startPage + maxButtons - 1);
 
   if (endPage - startPage + 1 < maxButtons) {
     startPage = Math.max(1, endPage - maxButtons + 1);

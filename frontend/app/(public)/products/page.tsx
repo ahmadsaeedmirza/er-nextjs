@@ -18,69 +18,7 @@ interface Product {
   discount?: number;
 }
 
-// Mock products data - fallback
-const mockProducts: Product[] = [
-  {
-    _id: "1",
-    id: "1",
-    slug: "signature-serum",
-    name: "Signature Hair Serum",
-    price: 45.99,
-    description: "Premium hair serum for shine and protection",
-    productImage: "shampoo.jpg",
-    stockQuantity: 10,
-  },
-  {
-    _id: "2",
-    id: "2",
-    slug: "hydrating-mask",
-    name: "Hydrating Mask",
-    price: 35.99,
-    description: "Deep moisture treatment for all hair types",
-    productImage: "shampoo.jpg",
-    stockQuantity: 15,
-  },
-  {
-    _id: "3",
-    id: "3",
-    slug: "color-protection",
-    name: "Color Protection Spray",
-    price: 28.99,
-    description: "UV protection for color-treated hair",
-    productImage: "shampoo.jpg",
-    stockQuantity: 0,
-  },
-  {
-    _id: "4",
-    id: "4",
-    slug: "volumizer",
-    name: "Volume Boost Spray",
-    price: 32.99,
-    description: "Lightweight volumizing spray",
-    productImage: "shampoo.jpg",
-    stockQuantity: 8,
-  },
-  {
-    _id: "5",
-    id: "5",
-    slug: "silk-pillowcase",
-    name: "Silk Pillowcase",
-    price: 49.99,
-    description: "Pure silk pillowcase for hair care",
-    productImage: "shampoo.jpg",
-    stockQuantity: 12,
-  },
-  {
-    _id: "6",
-    id: "6",
-    slug: "scalp-treatment",
-    name: "Scalp Treatment Oil",
-    price: 39.99,
-    description: "Nourishing scalp treatment",
-    productImage: "shampoo.jpg",
-    stockQuantity: 7,
-  },
-];
+
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);

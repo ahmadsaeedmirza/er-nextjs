@@ -33,7 +33,7 @@ const sendEmail = async (options) => {
     // If using Gmail, use 'Gmail' or the host/port below
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT,
-    secure: true,
+    secure: Number(process.env.EMAIL_PORT) === 465,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD, // Use your 16-character App Password
