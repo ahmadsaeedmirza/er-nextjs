@@ -17,7 +17,8 @@ const multerStorage = multer.diskStorage({
       .toLowerCase()
       .replace(/ /g, "-")
       .replace(/[^a-z0-9-]/g, "");
-    cb(null, `${slug}-${Date.now()}.jpg`);
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    cb(null, `${slug}-${Date.now()}-${randomSuffix}.jpg`);
   },
 });
 
@@ -25,11 +26,23 @@ const multerStorage = multer.diskStorage({
 const upload = multer({ storage: multerStorage });
 
 // Middleware to process the image upload
-exports.uploadProductPhoto = upload.single("productImage");
+exports.uploadProductPhoto = upload.fields([
+  { name: "productImage", maxCount: 1 },
+  { name: "additionalImages", maxCount: 10 },
+]);
 
 // Middleware to resize or add filename to body (The "Natours" style)
 exports.addPhotoToBody = (req, res, next) => {
-  if (req.file) req.body.productImage = req.file.filename;
+  if (req.files) {
+    if (req.files.productImage && req.files.productImage[0]) {
+      req.body.productImage = req.files.productImage[0].filename;
+    }
+    if (req.files.additionalImages) {
+      req.body.additionalImages = req.files.additionalImages.map(
+        (file) => file.filename
+      );
+    }
+  }
   next();
 };
 
@@ -43,11 +56,21 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
     return next(new AppError("No product found with this ID", 404));
   }
 
-  // Delete the image file if it exists
+  // Delete the main image file if it exists
   if (product.productImage) {
     const imagePath = path.join(__dirname, "..", "public", "images", "products", product.productImage);
     fs.unlink(imagePath, (err) => {
       if (err) console.error(`Failed to delete image: ${imagePath}`, err);
+    });
+  }
+
+  // Delete all additional image files if they exist
+  if (product.additionalImages && product.additionalImages.length > 0) {
+    product.additionalImages.forEach((img) => {
+      const imagePath = path.join(__dirname, "..", "public", "images", "products", img);
+      fs.unlink(imagePath, (err) => {
+        if (err) console.error(`Failed to delete additional image: ${imagePath}`, err);
+      });
     });
   }
 
@@ -60,10 +83,14 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
 });
 
 exports.updateProduct = catchAsync(async (req, res, next) => {
-  // If a new photo is uploaded, delete the old one
-  if (req.file) {
-    const oldProduct = await Product.findById(req.params.id);
-    if (oldProduct && oldProduct.productImage) {
+  const oldProduct = await Product.findById(req.params.id);
+  if (!oldProduct) {
+    return next(new AppError("No document found with this ID", 404));
+  }
+
+  // 1) If a new main photo is uploaded, delete the old one
+  if (req.files && req.files.productImage && req.files.productImage[0]) {
+    if (oldProduct.productImage) {
       const oldImagePath = path.join(
         __dirname,
         "..",
@@ -78,14 +105,48 @@ exports.updateProduct = catchAsync(async (req, res, next) => {
     }
   }
 
+  // 2) Manage additional images
+  let keptImages = [];
+  if (req.body.existingAdditionalImages) {
+    try {
+      keptImages = JSON.parse(req.body.existingAdditionalImages);
+    } catch (e) {
+      keptImages = req.body.existingAdditionalImages.split(",").filter(Boolean);
+    }
+  } else if (req.body.existingAdditionalImages === undefined) {
+    // If the field wasn't sent at all, assume we keep all current ones
+    keptImages = oldProduct.additionalImages || [];
+  }
+
+  // Delete additional images that were removed by the admin
+  if (oldProduct.additionalImages && oldProduct.additionalImages.length > 0) {
+    const removedImages = oldProduct.additionalImages.filter(
+      (img) => !keptImages.includes(img)
+    );
+    removedImages.forEach((img) => {
+      const imgPath = path.join(
+        __dirname,
+        "..",
+        "public",
+        "images",
+        "products",
+        img
+      );
+      fs.unlink(imgPath, (err) => {
+        if (err) console.error(`Failed to delete removed image: ${imgPath}`, err);
+      });
+    });
+  }
+
+  // Combine kept images with new ones
+  const newAdditionalImages = req.body.additionalImages || [];
+  req.body.additionalImages = [...keptImages, ...newAdditionalImages];
+
+  // 3) Update the database record
   const doc = await Product.findByIdAndUpdate(req.params.id, req.body, {
     returnDocument: "after",
     runValidators: true,
   });
-
-  if (!doc) {
-    return next(new AppError("No document found with this ID", 404));
-  }
 
   res.status(200).json({
     status: "success",

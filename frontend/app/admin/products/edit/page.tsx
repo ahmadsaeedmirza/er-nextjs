@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 interface Product {
   _id: string;
@@ -13,6 +14,8 @@ interface Product {
   discount: number;
   stockQuantity: number;
   productImage: string;
+  additionalImages?: string[];
+  isBestSeller?: boolean;
   isHidden: boolean;
 }
 
@@ -31,8 +34,15 @@ export default function EditProductPage() {
     discount: "0",
     stockQuantity: "0",
     productImage: null as File | null,
+    isBestSeller: false,
   });
   const [imagePreview, setImagePreview] = useState<string>("");
+  
+  // State for additional images
+  const [existingAdditionalImages, setExistingAdditionalImages] = useState<string[]>([]);
+  const [newAdditionalImages, setNewAdditionalImages] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+
   const [msgBox, setMsgBox] = useState({
     visible: false,
     message: "",
@@ -100,8 +110,10 @@ export default function EditProductPage() {
         discount: String(prod.discount || 0),
         stockQuantity: String(prod.stockQuantity),
         productImage: null,
+        isBestSeller: prod.isBestSeller || false,
       });
       setImagePreview(`/images/products/${prod.productImage}`);
+      setExistingAdditionalImages(prod.additionalImages || []);
       setIsProductHidden(prod.isHidden);
 
       // Get admin email from cookie or session
@@ -157,6 +169,39 @@ export default function EditProductPage() {
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
+  // Additional images handlers
+  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setNewAdditionalImages((prev) => [...prev, ...files]);
+
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setNewImagePreviews((prev) => [...prev, event.target.result as string]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveExistingImage = (indexToRemove: number) => {
+    setExistingAdditionalImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+  };
+
+  const handleRemoveNewImage = (indexToRemove: number) => {
+    setNewAdditionalImages((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+    setNewImagePreviews((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+  };
+
   const handleStockChange = (delta: number) => {
     const current = parseInt(formData.stockQuantity) || 0;
     const newValue = Math.max(0, current + delta);
@@ -175,9 +220,19 @@ export default function EditProductPage() {
       data.append("price", formData.price);
       data.append("discount", formData.discount);
       data.append("stockQuantity", formData.stockQuantity);
+      data.append("isBestSeller", String(formData.isBestSeller));
+      
       if (formData.productImage) {
         data.append("productImage", formData.productImage);
       }
+
+      // Append kept files list as JSON string
+      data.append("existingAdditionalImages", JSON.stringify(existingAdditionalImages));
+
+      // Append newly uploaded additional files
+      newAdditionalImages.forEach((file) => {
+        data.append("additionalImages", file);
+      });
 
       const url = `${apiUrl}/api/v1/products/${productId}`;
       const method = "PATCH";
@@ -320,7 +375,7 @@ export default function EditProductPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto p-8">
+    <main className="flex-1 overflow-y-auto p-8 bg-[#F8F6F6]">
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -342,8 +397,8 @@ export default function EditProductPage() {
         {/* Form */}
         <form onSubmit={handleFormSubmit} className="space-y-8">
           {/* General Information Section */}
-          <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="text-lg font-semibold mb-6 text-slate-900">
+          <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+            <h3 className="text-lg font-semibold text-slate-900 border-b pb-3 border-slate-100">
               General Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -443,58 +498,156 @@ export default function EditProductPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Best Seller Checkbox */}
+              <div className="md:col-span-2 flex items-center gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                <input
+                  type="checkbox"
+                  id="isBestSeller"
+                  name="isBestSeller"
+                  checked={formData.isBestSeller}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      isBestSeller: e.target.checked,
+                    }))
+                  }
+                  className="w-5 h-5 text-[#CF1745] border-slate-300 rounded focus:ring-[#CF1745] focus:ring-offset-0 cursor-pointer"
+                />
+                <div>
+                  <label
+                    htmlFor="isBestSeller"
+                    className="text-sm font-bold text-slate-800 cursor-pointer select-none"
+                  >
+                    Best Seller (Show on Home Page)
+                  </label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Flag this product to feature it on the home page gallery. Only the first 3 flagged products will be shown.
+                  </p>
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Product Image Section */}
-          <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="text-lg font-semibold mb-4 text-slate-900">
-              Product Image
-            </h3>
-            <div
-              className="relative group cursor-pointer"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleImageDrop}
-            >
-              <div 
-                onClick={() => document.getElementById("productImageInput")?.click()}
-                className="w-full aspect-[21/9] bg-slate-100 rounded-lg overflow-hidden border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-[#CF1745] transition-all relative cursor-pointer"
+          <section className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-slate-900 border-b pb-3 border-slate-100">
+                Product Cover Image
+              </h3>
+              <div
+                className="relative group cursor-pointer"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleImageDrop}
               >
-                {/* Image Preview */}
-                {imagePreview && (
-                  <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: `url('${imagePreview}')` }}
-                  />
-                )}
+                <div 
+                  onClick={() => document.getElementById("productImageInput")?.click()}
+                  className="w-full aspect-[21/9] bg-slate-100 rounded-lg overflow-hidden border-2 border-dashed border-slate-300 flex flex-col items-center justify-center hover:border-[#CF1745] transition-all relative cursor-pointer"
+                >
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url('${imagePreview}')` }}
+                    />
+                  )}
 
-                {/* Hover Overlay */}
-                <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <i className="fa-solid fa-cloud-arrow-up text-4xl mb-2"></i>
-                  <p className="font-medium">Click to upload image</p>
-                  <p className="text-xs opacity-80 mt-1">
-                    PNG, JPG or WEBP • Max 5MB
-                  </p>
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i className="fa-solid fa-cloud-arrow-up text-4xl mb-2"></i>
+                    <p className="font-medium">Click to upload new cover image</p>
+                    <p className="text-xs opacity-80 mt-1">
+                      PNG, JPG or WEBP • Max 5MB
+                    </p>
+                  </div>
+
+                  {/* Default Placeholder */}
+                  {!imagePreview && (
+                    <div className="relative z-0 flex flex-col items-center text-slate-400">
+                      <i className="fa-solid fa-image text-5xl"></i>
+                      <p className="text-sm mt-3">Click to upload cover image</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Default Placeholder */}
-                {!imagePreview && (
-                  <div className="relative z-0 flex flex-col items-center text-slate-400">
-                    <i className="fa-solid fa-image text-5xl"></i>
-                    <p className="text-sm mt-3">Click to upload an image</p>
-                  </div>
-                )}
+                {/* Hidden File Input */}
+                <input
+                  id="productImageInput"
+                  type="file"
+                  name="productImage"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
               </div>
+            </div>
 
-              {/* Hidden File Input */}
-              <input
-                id="productImageInput"
-                type="file"
-                name="productImage"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-              />
+            {/* Additional Images Section */}
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-slate-900">
+                Additional Photos
+              </h3>
+              <p className="text-slate-500 text-xs mb-4">
+                Upload extra pictures to showcase details of this product in the user-side carousel.
+              </p>
+
+              {/* Grid of Existing and New Images */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                {/* Existing Images */}
+                {existingAdditionalImages.map((img, index) => (
+                  <div key={`existing-${index}`} className="relative aspect-square bg-slate-100 border border-slate-200 rounded-xl overflow-hidden group">
+                    <Image
+                      src={`/images/products/${img}`}
+                      alt={`Additional ${index}`}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 20vw"
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveExistingImage(index)}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 cursor-pointer"
+                      title="Remove image"
+                    >
+                      <i className="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                  </div>
+                ))}
+
+                {/* New Image Previews */}
+                {newImagePreviews.map((preview, index) => (
+                  <div key={`new-${index}`} className="relative aspect-square bg-slate-100 border border-dashed border-[#CF1745]/30 rounded-xl overflow-hidden group">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{ backgroundImage: `url('${preview}')` }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveNewImage(index)}
+                      className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 cursor-pointer"
+                      title="Remove image"
+                    >
+                      <i className="fa-solid fa-trash-can text-sm"></i>
+                    </button>
+                    <div className="absolute bottom-2 left-2 px-1.5 py-0.5 bg-[#CF1745] text-white text-[9px] font-bold rounded uppercase">
+                      New
+                    </div>
+                  </div>
+                ))}
+
+                {/* Upload Button */}
+                <label className="border-2 border-dashed border-slate-300 hover:border-[#CF1745] hover:text-[#CF1745] rounded-xl aspect-square flex flex-col items-center justify-center text-slate-400 transition-all cursor-pointer">
+                  <i className="fa-solid fa-plus text-2xl mb-1"></i>
+                  <span className="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleAdditionalImagesChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           </section>
 

@@ -50,7 +50,7 @@ export default function Home() {
         // Filter hidden products and get first 3
         const visibleProducts =
           data.data?.data
-            ?.filter((product: Product) => !product.isHidden)
+            ?.filter((product: Product) => !product.isHidden && product.isBestSeller)
             .slice(0, 3) || [];
 
         setProducts(visibleProducts);

@@ -173,6 +173,7 @@ export default async function ProductOnePage({ params }: ProductOnePageProps) {
           src={`/images/products/${product.productImage}`}
           alt={product.name}
           isOutOfStock={product.stockQuantity === 0}
+          additionalImages={product.additionalImages}
         />
 
         <ProductDetailSection

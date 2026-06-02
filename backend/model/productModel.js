@@ -38,6 +38,14 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    additionalImages: {
+      type: [String],
+      default: [],
+    },
+    isBestSeller: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },
