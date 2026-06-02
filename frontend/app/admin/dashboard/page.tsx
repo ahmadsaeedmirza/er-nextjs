@@ -1,7 +1,8 @@
 "use client";
-
+ 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 interface DashboardData {
   totals: {
@@ -48,11 +49,14 @@ export default function DashboardPage() {
     "Loading dashboard data...",
   );
   const [toast, setToast] = useState({ message: "", type: "", visible: false });
+  const [isConnected, setIsConnected] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const fetchDashboard = async () => {
-    setIsLoading(true);
-    setLoadingMessage("Loading dashboard data...");
+  const fetchDashboard = async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+      setLoadingMessage("Loading dashboard data...");
+    }
     try {
       const response = await fetch(`${apiUrl}/api/v1/admin/dashboard-stats`, {
         method: "GET",
@@ -70,20 +74,109 @@ export default function DashboardPage() {
 
       const data = await response.json();
       setDashboardData(data.data);
-      setIsLoading(false);
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Unable to load dashboard data";
-      setLoadingMessage(message);
+      if (!silent) {
+        setLoadingMessage(message);
+      }
       showToast(message, "error");
+    } finally {
+      if (!silent) {
+        setIsLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchDashboard();
   }, [apiUrl, router]);
+
+  // Play synthesized notification sound safely (check SSR)
+  const playNotificationSound = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioCtx = new AudioContextClass();
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.15);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+      gain2.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.1);
+      osc2.stop(audioCtx.currentTime + 0.3);
+    } catch (error) {
+      console.warn("Audio Context error:", error);
+    }
+  };
+
+  // Socket.io integration
+  useEffect(() => {
+    const socket = io(apiUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      console.log("Connected to dashboard socket server");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      console.log("Disconnected from dashboard socket server");
+    });
+
+    socket.on("orderCreated", (order: any) => {
+      const displayId = `#ord-${String(order._id || "").slice(-6).toUpperCase()}`;
+      showToast(`New Order received: ${displayId}`);
+      playNotificationSound();
+      fetchDashboard(true);
+    });
+
+    socket.on("appointmentCreated", (appt: any) => {
+      showToast(`New Appointment: ${appt.customerName || "Client"}`);
+      playNotificationSound();
+      fetchDashboard(true);
+    });
+
+    socket.on("orderUpdated", () => {
+      fetchDashboard(true);
+    });
+
+    socket.on("orderDeleted", () => {
+      fetchDashboard(true);
+    });
+
+    socket.on("appointmentUpdated", () => {
+      fetchDashboard(true);
+    });
+
+    socket.on("appointmentDeleted", () => {
+      fetchDashboard(true);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [apiUrl]);
 
   const showToast = (
     message: string,
@@ -208,16 +301,25 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900">Dashboard</h2>
-          <button
-            onClick={() => {
-              fetchDashboard();
-              showToast("Dashboard refreshed.");
-            }}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all ${
+              isConnected
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-rose-50 text-rose-700 border-rose-200"
+            }`}
           >
-            <i className="fa-solid fa-rotate-right" />
-            Refresh
-          </button>
+            <span className="relative flex h-2 w-2">
+              {isConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isConnected ? "bg-emerald-500" : "bg-rose-500"
+                }`}
+              ></span>
+            </span>
+            {isConnected ? "Live Sync" : "Offline"}
+          </div>
         </div>
       </header>
 

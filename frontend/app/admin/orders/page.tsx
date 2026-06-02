@@ -1,7 +1,8 @@
 "use client";
-
+ 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 interface OrderItem {
   productId: string;
@@ -32,6 +33,7 @@ export default function ManageOrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ message: "", type: "", visible: false });
+  const [isConnected, setIsConnected] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const pageSize = 6;
@@ -46,13 +48,83 @@ export default function ManageOrdersPage() {
     }, 4000);
   };
 
-  // Load orders
+  // Play synthesized notification sound safely (check SSR)
+  const playNotificationSound = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioCtx = new AudioContextClass();
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.15);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+      gain2.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.1);
+      osc2.stop(audioCtx.currentTime + 0.3);
+    } catch (error) {
+      console.warn("Audio Context error:", error);
+    }
+  };
+
+  // Load orders on mount
   useEffect(() => {
     loadOrders();
   }, []);
 
-  const loadOrders = async () => {
-    setIsLoading(true);
+  // Socket.io integration
+  useEffect(() => {
+    const socket = io(apiUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      console.log("Connected to orders socket server");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      console.log("Disconnected from orders socket server");
+    });
+
+    socket.on("orderCreated", (order: any) => {
+      const displayId = `#ord-${String(order._id || "").slice(-6).toUpperCase()}`;
+      showToast(`New Order received: ${displayId}`);
+      playNotificationSound();
+      loadOrders(true);
+    });
+
+    socket.on("orderUpdated", () => {
+      loadOrders(true);
+    });
+
+    socket.on("orderDeleted", () => {
+      loadOrders(true);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [apiUrl]);
+
+  const loadOrders = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     try {
       const [ordersRes, productsRes] = await Promise.all([
         fetch(`${apiUrl}/api/v1/orders?limit=1000&sort=-createdAt`, {
@@ -85,13 +157,15 @@ export default function ManageOrdersPage() {
       );
 
       setOrders(ordersList);
-      setCurrentPage(1);
+      if (!silent) {
+        setCurrentPage(1);
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unable to load orders";
       showToast(errorMessage, "error");
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
@@ -281,13 +355,25 @@ export default function ManageOrdersPage() {
             <h1 className="text-3xl font-black text-slate-900 pb-4 tracking-tight">
               Orders Overview
             </h1>
-            <button
-              onClick={() => loadOrders()}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-white"
+            <div
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all ${
+                isConnected
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-rose-50 text-rose-700 border-rose-200"
+              }`}
             >
-              <i className="fa-solid fa-rotate-right"></i>
-              Refresh
-            </button>
+              <span className="relative flex h-2 w-2">
+                {isConnected && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span
+                  className={`relative inline-flex rounded-full h-2 w-2 ${
+                    isConnected ? "bg-emerald-500" : "bg-rose-500"
+                  }`}
+                ></span>
+              </span>
+              {isConnected ? "Live Sync" : "Offline"}
+            </div>
           </div>
 
           {/* Search & Filters */}
@@ -391,7 +477,7 @@ export default function ManageOrdersPage() {
                           {order.itemCount} item
                           {order.itemCount === 1 ? "" : "s"}
                         </td>
-                        <td className="px-6 py-4 text-sm font-semibold">
+                        <td className="px-6 py-4 text-sm font-black text-[#CF1745]">
                           ${formatCurrency(order.totalPrice)}
                         </td>
                         <td className="px-6 py-4 text-sm">

@@ -1,7 +1,8 @@
 "use client";
-
+ 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 interface Appointment {
   _id: string;
@@ -50,10 +51,92 @@ export default function ManageAppointmentsPage() {
     isLoading: true,
     error: null,
   });
+  const [toast, setToast] = useState({ message: "", type: "", visible: false });
+  const [isConnected, setIsConnected] = useState(false);
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
+    setToast({ message, type, visible: true });
+    setTimeout(() => {
+      setToast({ message: "", type: "", visible: false });
+    }, 4000);
+  };
+
+  // Play synthesized notification sound safely (check SSR)
+  const playNotificationSound = () => {
+    if (typeof window === "undefined") return;
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioCtx = new AudioContextClass();
+      
+      const osc1 = audioCtx.createOscillator();
+      const gain1 = audioCtx.createGain();
+      osc1.type = "sine";
+      osc1.frequency.setValueAtTime(783.99, audioCtx.currentTime);
+      gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+      osc1.connect(gain1);
+      gain1.connect(audioCtx.destination);
+      osc1.start();
+      osc1.stop(audioCtx.currentTime + 0.15);
+
+      const osc2 = audioCtx.createOscillator();
+      const gain2 = audioCtx.createGain();
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+      gain2.gain.setValueAtTime(0.08, audioCtx.currentTime + 0.1);
+      gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc2.connect(gain2);
+      gain2.connect(audioCtx.destination);
+      osc2.start(audioCtx.currentTime + 0.1);
+      osc2.stop(audioCtx.currentTime + 0.3);
+    } catch (error) {
+      console.warn("Audio Context error:", error);
+    }
+  };
 
   // Load appointments on mount
   useEffect(() => {
     loadAppointments();
+  }, []);
+
+  // Socket.io integration
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const socket = io(apiUrl, {
+      withCredentials: true,
+    });
+
+    socket.on("connect", () => {
+      setIsConnected(true);
+      console.log("Connected to appointments socket server");
+    });
+
+    socket.on("disconnect", () => {
+      setIsConnected(false);
+      console.log("Disconnected from appointments socket server");
+    });
+
+    socket.on("appointmentCreated", (appt: any) => {
+      showToast(`New Appointment: ${appt.customerName || "Client"}`);
+      playNotificationSound();
+      loadAppointments(false, true); // silent = true
+    });
+
+    socket.on("appointmentUpdated", () => {
+      loadAppointments(false, true);
+    });
+
+    socket.on("appointmentDeleted", () => {
+      loadAppointments(false, true);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   // Apply filters whenever state changes
@@ -68,8 +151,10 @@ export default function ManageAppointmentsPage() {
     state.searchTerm,
   ]);
 
-  const loadAppointments = useCallback(async (showRefreshToast = false) => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const loadAppointments = useCallback(async (showRefreshToast = false, silent = false) => {
+    if (!silent) {
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+    }
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -100,17 +185,17 @@ export default function ManageAppointmentsPage() {
       setState((prev) => ({
         ...prev,
         appointments: normalized,
-        currentPage: 1,
+        currentPage: silent ? prev.currentPage : 1,
         isLoading: false,
       }));
 
       if (showRefreshToast) {
-        // Toast shown via side effect in parent
+        showToast("Appointments list refreshed.");
       }
     } catch (error) {
       handleLoadError(error);
     }
-  }, []);
+  }, [router]);
 
   const normalizeAppointment = (
     appointment: Appointment,
@@ -297,7 +382,18 @@ export default function ManageAppointmentsPage() {
       : `Showing ${startIndex + 1} to ${Math.min(startIndex + currentAppointments.length, totalAppointments)} of ${totalAppointments} appointments`;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <>
+      {/* Toast Notification */}
+      {toast.visible && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-opacity duration-300 ${
+            toast.type === "error" ? "bg-red-600" : "bg-[#CF1745]"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
+      <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
@@ -310,14 +406,26 @@ export default function ManageAppointmentsPage() {
             </p>
           </div>
 
-          {/* Refresh Button */}
-          <button
-            onClick={() => loadAppointments(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-white"
+          {/* Live Status Indicator */}
+          <div
+            className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all ${
+              isConnected
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-rose-50 text-rose-700 border-rose-200"
+            }`}
           >
-            <i className="fa-solid fa-rotate-right"></i>
-            Refresh
-          </button>
+            <span className="relative flex h-2 w-2">
+              {isConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isConnected ? "bg-emerald-500" : "bg-rose-500"
+                }`}
+              ></span>
+            </span>
+            {isConnected ? "Live Sync" : "Offline"}
+          </div>
         </div>
 
         {/* Filters */}
@@ -552,6 +660,7 @@ export default function ManageAppointmentsPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

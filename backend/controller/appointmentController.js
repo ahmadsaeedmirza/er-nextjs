@@ -56,7 +56,13 @@ exports.createAppointment = catchAsync(async (req, res, next) => {
     // We don't fail the request if the calendar sync fails, but we log it
   }
 
-  // C) Success Response
+  // C) Emit WebSocket event
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("appointmentCreated", newAppointment);
+  }
+
+  // D) Success Response
   res.status(201).json({
     status: "success",
     data: {
@@ -230,6 +236,12 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
     }
   }
 
+  // Emit WebSocket event
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("appointmentUpdated", updatedAppointment);
+  }
+
   res.status(200).json({
     status: "success",
     data: {
@@ -241,4 +253,22 @@ exports.updateAppointment = catchAsync(async (req, res, next) => {
 // 3. ADMIN FUNCTIONS
 exports.getAllAppointments = factory.getAll(Appointment);
 exports.getAppointment = factory.getOne(Appointment);
-exports.deleteAppointment = factory.deleteOne(Appointment);
+
+exports.deleteAppointment = catchAsync(async (req, res, next) => {
+  const deletedAppointment = await Appointment.findByIdAndDelete(req.params.id);
+
+  if (!deletedAppointment) {
+    return next(new AppError("No appointment found with that ID", 404));
+  }
+
+  // Emit WebSocket event
+  const io = req.app.get("io");
+  if (io) {
+    io.emit("appointmentDeleted", req.params.id);
+  }
+
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
+});
