@@ -1,9 +1,8 @@
+import type { Metadata } from "next";
 import ProductImageSection from "@/components/ProductImageSection";
 import ProductDetailSection from "@/components/ProductDetailSection";
 import ProductCardItem from "@/components/ProductCardItem";
 import Link from "next/link";
-
-
 
 interface ProductOnePageProps {
   params: Promise<{
@@ -23,6 +22,25 @@ interface Product {
   isHidden?: boolean;
   discount?: number;
   additionalImages?: string[];
+}
+
+export async function generateMetadata(
+  { params }: ProductOnePageProps
+): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await fetchProduct(slug);
+
+  if (!product) {
+    return {
+      title: "Product Not Found - E & R Salon",
+      description: "The requested salon product could not be found.",
+    };
+  }
+
+  return {
+    title: `${product.name} - E & R Salon`,
+    description: product.description || `Buy ${product.name} premium product online at E & R Salon.`,
+  };
 }
 
 async function fetchProduct(slug: string) {

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import ContactHero from "@/components/ContactHero";
 import MapSection from "@/components/MapSection";
 import InquiryForm from "@/components/InquiryForm";
+
+export const metadata: Metadata = {
+  title: "Contact Us - E & R Salon",
+  description:
+    "Visit E & R Salon at Hacienda Heights, CA. Contact our reservation desk, find our hours of operation, or send us an inquiry online.",
+};
 
 export default function ContactUs() {
   return (

@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Order Confirmed - E & R Salon",
+  description: "Your order has been placed successfully. Thank you for shopping with E & R Salon.",
+};
 
 export default function OrderConfirmationPage() {
   return (

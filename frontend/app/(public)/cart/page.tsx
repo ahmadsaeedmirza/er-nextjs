@@ -35,6 +35,11 @@ export default function CartPage() {
     fetchCartItems();
   }, []);
 
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = "Your Cart - E & R Salon";
+  }, []);
+
   // Calculate totals whenever cart items change
   useEffect(() => {
     calculateTotals();

@@ -29,6 +29,11 @@ export default function Products() {
   const [sortBy, setSortBy] = useState("default");
   const [availability, setAvailability] = useState("all");
 
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = "Our Products - E & R Salon";
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {

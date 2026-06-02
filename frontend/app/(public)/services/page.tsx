@@ -1,10 +1,15 @@
-"use client";
-
+import type { Metadata } from "next";
 import ServiceCard from "@/components/ServiceCard";
 import SkinCard from "@/components/SkinCard";
 import NailCard from "@/components/NailCard";
 import ServicesHero from "@/components/ServicesHero";
 import QuoteSection from "@/components/QuoteSection";
+
+export const metadata: Metadata = {
+  title: "Services & Treatments - E & R Salon",
+  description:
+    "Explore our premium beauty care services: hair styling, precision haircuts, bespoke color treatments, rejuvenating facials, and custom nail art.",
+};
 
 export default function Services() {
   return (

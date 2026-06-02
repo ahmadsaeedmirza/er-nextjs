@@ -4,10 +4,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
     return [
       {
         source: "/images/products/:path*",
-        destination: "http://localhost:8000/images/products/:path*",
+        destination: `${backendUrl}/images/products/:path*`,
       },
     ];
   },

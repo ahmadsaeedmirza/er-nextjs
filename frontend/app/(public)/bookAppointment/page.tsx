@@ -64,6 +64,11 @@ export default function BookAppointment() {
     }
   }, [searchParams]);
 
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = "Book Appointment - E & R Salon";
+  }, []);
+
   // Render calendar on current date change
   useEffect(() => {
     renderCalendar();
