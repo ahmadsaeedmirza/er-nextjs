@@ -41,9 +41,18 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // 1 - Global MIDDLEWARES
 // IMPLEMENT CORS (ALLOW CROSS SERVER REQUESTS)
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:8000",
+];
+if (process.env.FRONTEND_URL) {
+  // Support both trailing slash and non-trailing slash origins
+  allowedOrigins.push(process.env.FRONTEND_URL.replace(/\/$/, ""));
+}
+
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:8000"],
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
