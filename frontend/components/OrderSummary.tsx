@@ -4,7 +4,6 @@ import React from "react";
 
 interface OrderSummaryProps {
   subtotal: number;
-  tax: number;
   grandTotal: number;
   onPlaceOrder: () => void;
   isLoading?: boolean;
@@ -12,7 +11,6 @@ interface OrderSummaryProps {
 
 const OrderSummary: React.FC<OrderSummaryProps> = ({
   subtotal,
-  tax,
   grandTotal,
   onPlaceOrder,
   isLoading = false,
@@ -27,12 +25,6 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({
           <span>Subtotal:</span>
           <span id="subtotal" className="font-medium">
             ${subtotal.toFixed(2)}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span>Sales Tax (10%):</span>
-          <span id="tax" className="font-medium">
-            ${tax.toFixed(2)}
           </span>
         </div>
         <div className="flex justify-between border-t pt-4 font-bold text-xl">

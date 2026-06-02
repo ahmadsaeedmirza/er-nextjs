@@ -20,13 +20,10 @@ interface ShippingFormData {
   phone: string;
 }
 
-const TAX_RATE = 0.1; // 10% tax rate
-
 export default function CartPage() {
   const formRef = useRef<HTMLFormElement>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [subtotal, setSubtotal] = useState(0);
-  const [tax, setTax] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -79,11 +76,9 @@ export default function CartPage() {
       calculatedSubtotal += item.price * item.quantity;
     });
 
-    const calculatedTax = calculatedSubtotal * TAX_RATE;
-    const calculatedGrandTotal = calculatedSubtotal + calculatedTax;
+    const calculatedGrandTotal = calculatedSubtotal;
 
     setSubtotal(calculatedSubtotal);
-    setTax(calculatedTax);
     setGrandTotal(calculatedGrandTotal);
   };
 
@@ -210,7 +205,6 @@ export default function CartPage() {
             {/* Order Summary */}
             <OrderSummary
               subtotal={subtotal}
-              tax={tax}
               grandTotal={grandTotal}
               onPlaceOrder={() => {
                 if (formRef.current) {
