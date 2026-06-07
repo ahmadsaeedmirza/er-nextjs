@@ -1,8 +1,5 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
 import ServiceCard from "@/components/ServiceCard";
 import InstagramPost from "@/components/InstagramPost";
@@ -18,58 +15,37 @@ interface Product {
   stockQuantity: number;
   isHidden?: boolean;
   salePrice?: number;
+  isBestSeller?: boolean;
 }
 
-// Fallback mock products if API fails
+async function fetchBestSellers(): Promise<Product[]> {
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
+      cache: "no-store",
+    });
 
-export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products: ${response.statusText}`);
+    }
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // Add this line
-        });
+    const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.statusText}`);
-        }
+    // Filter hidden products and get first 3 best sellers
+    const visibleProducts =
+      data.data?.data
+        ?.filter((product: Product) => !product.isHidden && product.isBestSeller)
+        .slice(0, 3) || [];
 
-        const data = await response.json();
+    return visibleProducts;
+  } catch (err) {
+    console.error("Error fetching products on server:", err);
+    return [];
+  }
+}
 
-        // Filter hidden products and get first 3
-        const visibleProducts =
-          data.data?.data
-            ?.filter((product: Product) => !product.isHidden && product.isBestSeller)
-            .slice(0, 3) || [];
-
-        setProducts(visibleProducts);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch products",
-        );
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  const displayProducts = products && products.length > 0 ? products : [];
+export default async function Home() {
+  const displayProducts = await fetchBestSellers();
 
   return (
     <div>
@@ -143,7 +119,7 @@ export default function Home() {
               <i className="fa-solid fa-chevron-right text-[#CF1745E6]" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex flex-col md:grid md:grid-cols-4 gap-4">
             <ServiceCard
               imgUrl="/images/manicure.jpg"
               altText="Professional stylist cutting long hair in salon"
@@ -229,17 +205,9 @@ export default function Home() {
             </h3>
           </div>
 
-          {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading products...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500">Error loading products: {error}</p>
-            </div>
-          ) : displayProducts.length > 0 ? (
+          {displayProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {displayProducts.map((product) => (
+              {displayProducts.map((product: Product) => (
                 <ProductCard
                   key={product._id || product.name}
                   image={`/images/products/${product.productImage}`}
@@ -303,3 +271,4 @@ export default function Home() {
     </div>
   );
 }
+

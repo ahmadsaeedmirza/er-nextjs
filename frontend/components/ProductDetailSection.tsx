@@ -37,7 +37,7 @@ export default function ProductDetailSection({
     setIsLoading(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/cart/add`, {
+      const response = await fetch(`${apiUrl}/api/basket/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

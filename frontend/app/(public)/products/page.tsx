@@ -1,9 +1,11 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import type { Metadata } from "next";
 import ProductsHero from "@/components/ProductsHero";
-import FilterSidebar from "@/components/FilterSidebar";
-import ProductCardItem from "@/components/ProductCardItem";
+import ProductFilterContainer from "@/components/ProductFilterContainer";
+
+export const metadata: Metadata = {
+  title: "Our Products - E & R Salon",
+  description: "Browse our exclusive collection of high-performance beauty and styling essentials.",
+};
 
 interface Product {
   _id: string;
@@ -18,180 +20,56 @@ interface Product {
   discount?: number;
 }
 
-
-
-export default function Products() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("default");
-  const [availability, setAvailability] = useState("all");
-
-  // Update document title for SEO
-  useEffect(() => {
-    document.title = "Our Products - E & R Salon";
-  }, []);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch products: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        // Filter hidden products
-        const visibleProducts =
-          data.data?.data
-            ?.filter((product: Product) => !product.isHidden)
-            .map((product: Product) => ({
-              ...product,
-              id: product._id || product.id,
-            })) || [];
-
-        setProducts(visibleProducts);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch products",
-        );
-        setProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  // Filter products in memory
-  const filteredProducts = products.filter((product) => {
-    // 1. Search term filter
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // 2. Availability filter
-    const matchesAvailability =
-      availability === "all" ||
-      (availability === "in-stock" && product.stockQuantity > 0);
-
-    return matchesSearch && matchesAvailability;
+async function fetchProducts() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const response = await fetch(`${apiUrl}/api/v1/products?limit=1000`, {
+    cache: "no-store",
   });
 
-  // Sort products in memory
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    if (sortBy === "price-low-high") {
-      return a.price - b.price;
-    }
-    if (sortBy === "price-high-low") {
-      return b.price - a.price;
-    }
-    if (sortBy === "name-a-z") {
-      return a.name.localeCompare(b.name);
-    }
-    if (sortBy === "name-z-a") {
-      return b.name.localeCompare(a.name);
-    }
-    return 0;
-  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch products: ${response.statusText}`);
+  }
 
-  const displayProducts = sortedProducts;
+  const data = await response.json();
+
+  // Filter hidden products
+  const visibleProducts =
+    data.data?.data
+      ?.filter((product: Product) => !product.isHidden)
+      .map((product: Product) => ({
+        ...product,
+        id: product._id || product.id,
+      })) || [];
+
+  return visibleProducts;
+}
+
+export default async function Products() {
+  let products: Product[] = [];
+  let error: string | null = null;
+
+  try {
+    products = await fetchProducts();
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    error = err instanceof Error ? err.message : "Failed to fetch products";
+  }
 
   return (
     <div>
       {/* HERO SECTION */}
       <ProductsHero />
 
-      {/* PRODUCTS SECTION */}
-      <main className="bg-[#F8F6F6] pb-24 pt-16">
-        {/* SEARCH BAR SECTION */}
-        <div className="max-w-7xl mx-auto px-6 mb-12">
-          <div className="max-w-2xl mx-auto relative">
-            <input
-              type="text"
-              placeholder="Search our premium signature products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-full border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#CF174514] focus:border-[#CF1745] text-base text-slate-900 placeholder-slate-400 transition-all shadow-sm"
-            />
-            <svg
-              className="absolute left-5 top-[18px] w-5 h-5 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+      {error ? (
+        <main className="bg-[#F8F6F6] pb-24 pt-16">
+          <div className="text-center py-12">
+            <p className="text-red-500">Error loading products: {error}</p>
           </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-8">
-            {/* SIDEBAR FILTERS */}
-            <FilterSidebar
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-              availability={availability}
-              onAvailabilityChange={setAvailability}
-            />
-
-            {/* PRODUCTS GRID */}
-            <div className="flex-1">
-              {loading ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Loading products...</p>
-                </div>
-              ) : error ? (
-                <div className="text-center py-12">
-                  <p className="text-red-500">
-                    Error loading products: {error}
-                  </p>
-                </div>
-              ) : displayProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {displayProducts.map((product) => (
-                    <ProductCardItem
-                      key={product._id || product.id}
-                      id={product.id || product._id}
-                      slug={product.slug}
-                      name={product.name}
-                      price={product.price}
-                      description={product.description}
-                      productImage={product.productImage}
-                      stockQuantity={product.stockQuantity}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">No products available</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </main>
+        </main>
+      ) : (
+        <ProductFilterContainer initialProducts={products} />
+      )}
     </div>
   );
 }
+

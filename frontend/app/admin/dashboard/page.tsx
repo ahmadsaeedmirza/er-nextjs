@@ -1,6 +1,6 @@
 "use client";
  
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 
@@ -52,7 +52,17 @@ export default function DashboardPage() {
   const [isConnected, setIsConnected] = useState(false);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  const fetchDashboard = async (silent = false) => {
+  const showToast = useCallback((
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
+    setToast({ message, type, visible: true });
+    setTimeout(() => {
+      setToast({ message: "", type: "", visible: false });
+    }, 3500);
+  }, []);
+
+  const fetchDashboard = useCallback(async (silent = false) => {
     if (!silent) {
       setIsLoading(true);
       setLoadingMessage("Loading dashboard data...");
@@ -88,17 +98,17 @@ export default function DashboardPage() {
         setIsLoading(false);
       }
     }
-  };
+  }, [apiUrl, router, showToast]);
 
   useEffect(() => {
     fetchDashboard();
-  }, [apiUrl, router]);
+  }, [fetchDashboard]);
 
   // Play synthesized notification sound safely (check SSR)
-  const playNotificationSound = () => {
+  const playNotificationSound = useCallback(() => {
     if (typeof window === "undefined") return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
       const audioCtx = new AudioContextClass();
       
@@ -126,7 +136,7 @@ export default function DashboardPage() {
     } catch (error) {
       console.warn("Audio Context error:", error);
     }
-  };
+  }, []);
 
   // Socket.io integration
   useEffect(() => {
@@ -144,14 +154,14 @@ export default function DashboardPage() {
       console.log("Disconnected from dashboard socket server");
     });
 
-    socket.on("orderCreated", (order: any) => {
+    socket.on("orderCreated", (order: { _id: string }) => {
       const displayId = `#ord-${String(order._id || "").slice(-6).toUpperCase()}`;
       showToast(`New Order received: ${displayId}`);
       playNotificationSound();
       fetchDashboard(true);
     });
 
-    socket.on("appointmentCreated", (appt: any) => {
+    socket.on("appointmentCreated", (appt: { customerName?: string }) => {
       showToast(`New Appointment: ${appt.customerName || "Client"}`);
       playNotificationSound();
       fetchDashboard(true);
@@ -176,17 +186,8 @@ export default function DashboardPage() {
     return () => {
       socket.disconnect();
     };
-  }, [apiUrl]);
+  }, [apiUrl, fetchDashboard, playNotificationSound, showToast]);
 
-  const showToast = (
-    message: string,
-    type: "success" | "error" = "success",
-  ) => {
-    setToast({ message, type, visible: true });
-    setTimeout(() => {
-      setToast({ message: "", type: "", visible: false });
-    }, 3500);
-  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {

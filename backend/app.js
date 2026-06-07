@@ -28,6 +28,11 @@ app.use(
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
   }),
 );
 
@@ -44,6 +49,7 @@ app.use(express.static(path.join(__dirname, "public")));
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:8000",
+  "https://er-salon.vercel.app",
 ];
 if (process.env.FRONTEND_URL) {
   // Support both trailing slash and non-trailing slash origins
@@ -184,7 +190,7 @@ app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/appointments", appointmentRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/admin", userRouter);
-app.use("/api/cart", cartRouter);
+app.use("/api/basket", cartRouter);
 
 app.all("/*", (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this site`, 404));

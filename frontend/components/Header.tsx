@@ -15,7 +15,7 @@ export default function Header({ cartCount = 0 }: { cartCount?: number }) {
     // Fetch cart count from API
     const fetchCartCount = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/cart`, {
+        const response = await fetch(`${apiUrl}/api/basket`, {
           method: "GET",
           credentials: "include",
         });
@@ -23,7 +23,7 @@ export default function Header({ cartCount = 0 }: { cartCount?: number }) {
           const data = await response.json();
           const items = Array.isArray(data.data) ? data.data : [];
           const count = items.reduce(
-            (acc: number, item: any) => acc + item.quantity,
+            (acc: number, item: { quantity: number }) => acc + item.quantity,
             0,
           );
           setCartCountState(count);
@@ -158,31 +158,64 @@ export default function Header({ cartCount = 0 }: { cartCount?: number }) {
             </Link>
           </div>
           {/* Mobile Hamburger Button */}
-          <button id="mobile-menu-btn" className="md:hidden text-2xl p-2">
-            <i className="fa-solid fa-bars"></i>
+          <button
+            id="mobile-menu-btn"
+            className="md:hidden text-2xl p-2 text-[#CF1745] focus:outline-none"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <i className={mobileMenuOpen ? "fa-solid fa-xmark" : "fa-solid fa-bars"}></i>
           </button>
         </div>
         {/* Mobile Menu Container (Hidden by default) */}
         <div
           id="mobile-menu"
-          className="hidden md:hidden bg-white flex flex-col items-center gap-4 py-6 transition-all duration-300 ease-in-out"
+          className={`${
+            mobileMenuOpen ? "flex" : "hidden"
+          } md:hidden bg-white flex-col items-center gap-4 py-6 transition-all duration-300 ease-in-out`}
         >
-          <Link href="/" className="text-sm font-semibold uppercase">
+          <Link
+            href="/"
+            className={`text-sm font-semibold uppercase transition-colors hover:text-[#CF1745] ${
+              isActive("/") ? "text-[#CF1745]" : "text-black"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Home
           </Link>
-          <Link href="/products" className="text-sm font-semibold uppercase">
+          <Link
+            href="/products"
+            className={`text-sm font-semibold uppercase transition-colors hover:text-[#CF1745] ${
+              isActive("/products") ? "text-[#CF1745]" : "text-black"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Products
           </Link>
-          <Link href="/services" className="text-sm font-semibold uppercase">
+          <Link
+            href="/services"
+            className={`text-sm font-semibold uppercase transition-colors hover:text-[#CF1745] ${
+              isActive("/services") ? "text-[#CF1745]" : "text-black"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Services
           </Link>
           <Link
             href="/bookAppointment"
-            className="text-sm font-semibold uppercase"
+            className={`text-sm font-semibold uppercase transition-colors hover:text-[#CF1745] ${
+              isActive("/bookAppointment") ? "text-[#CF1745]" : "text-black"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
           >
             Book Appointment
           </Link>
-          <Link href="/contactUs" className="text-sm font-semibold uppercase">
+          <Link
+            href="/contactUs"
+            className={`text-sm font-semibold uppercase transition-colors hover:text-[#CF1745] ${
+              isActive("/contactUs") ? "text-[#CF1745]" : "text-black"
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
             Contact Us
           </Link>
           <Link
@@ -192,6 +225,7 @@ export default function Header({ cartCount = 0 }: { cartCount?: number }) {
                 ? "text-[#CF1745]"
                 : "text-black hover:text-[#CF1745]"
             }`}
+            onClick={() => setMobileMenuOpen(false)}
           >
             <span className="fa-solid fa-cart-shopping text-xl" />
             {cartCountState > 0 && (

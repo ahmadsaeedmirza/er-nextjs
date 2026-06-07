@@ -21,7 +21,6 @@ const CartItem: React.FC<CartItemProps> = ({
   image,
   price,
   quantity,
-  detail,
   onQuantityChange,
   onDelete,
   onError,
@@ -43,7 +42,7 @@ const CartItem: React.FC<CartItemProps> = ({
   const handleIncrease = async () => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`${apiUrl}/api/cart/update-quantity`, {
+      const response = await fetch(`${apiUrl}/api/basket/update-quantity`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +75,7 @@ const CartItem: React.FC<CartItemProps> = ({
 
     setIsUpdating(true);
     try {
-      const response = await fetch(`${apiUrl}/api/cart/update-quantity`, {
+      const response = await fetch(`${apiUrl}/api/basket/update-quantity`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +106,7 @@ const CartItem: React.FC<CartItemProps> = ({
   const handleDelete = async () => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`${apiUrl}/api/cart/remove`, {
+      const response = await fetch(`${apiUrl}/api/basket/remove`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
