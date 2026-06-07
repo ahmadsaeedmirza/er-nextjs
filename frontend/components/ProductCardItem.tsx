@@ -37,7 +37,7 @@ export default function ProductCardItem({
   const handleAddToCart = async () => {
     setIsAdding(true);
     try {
-      const response = await fetch(`${apiUrl}/api/cart/add`, {
+      const response = await fetch(`${apiUrl}/api/basket/add`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

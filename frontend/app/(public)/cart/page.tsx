@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import CartItemsList from "@/components/CartItemsList";
 import ShippingForm from "@/components/ShippingForm";
 import OrderSummary from "@/components/OrderSummary";
@@ -30,25 +31,10 @@ export default function CartPage() {
   const [toast, setToast] = useState({ message: "", type: "", visible: false });
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  // Fetch cart items on component mount
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
-
-  // Update document title for SEO
-  useEffect(() => {
-    document.title = "Your Cart - E & R Salon";
-  }, []);
-
-  // Calculate totals whenever cart items change
-  useEffect(() => {
-    calculateTotals();
-  }, [cartItems]);
-
-  const fetchCartItems = async () => {
+  const fetchCartItems = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${apiUrl}/api/cart`, {
+      const response = await fetch(`${apiUrl}/api/basket`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -72,9 +58,9 @@ export default function CartPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [apiUrl]);
 
-  const calculateTotals = () => {
+  const calculateTotals = useCallback(() => {
     let calculatedSubtotal = 0;
 
     cartItems.forEach((item) => {
@@ -85,7 +71,22 @@ export default function CartPage() {
 
     setSubtotal(calculatedSubtotal);
     setGrandTotal(calculatedGrandTotal);
-  };
+  }, [cartItems]);
+
+  // Fetch cart items on component mount
+  useEffect(() => {
+    fetchCartItems();
+  }, [fetchCartItems]);
+
+  // Update document title for SEO
+  useEffect(() => {
+    document.title = "Your Cart - E & R Salon";
+  }, []);
+
+  // Calculate totals whenever cart items change
+  useEffect(() => {
+    calculateTotals();
+  }, [calculateTotals]);
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
     setCartItems((prevItems) =>
@@ -244,17 +245,17 @@ export default function CartPage() {
                 Your Cart is Empty
               </h2>
               <p className="text-gray-600 text-lg">
-                Looks like you haven't added anything yet
+                {"Looks like you haven't added anything yet"}
               </p>
             </div>
 
             {/* Continue Shopping Button */}
-            <a
+            <Link
               href="/products"
               className="inline-block mt-8 bg-[#CF1745] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#b01235] transition-colors"
             >
               Continue Shopping
-            </a>
+            </Link>
           </div>
         </div>
       )}

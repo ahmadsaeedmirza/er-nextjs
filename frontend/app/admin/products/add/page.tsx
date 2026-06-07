@@ -53,8 +53,9 @@ export default function AddProductPage() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target?.result) {
-        setImagePreview(event.target.result as string);
+      const result = event.target?.result;
+      if (result) {
+        setImagePreview(result as string);
       }
     };
     reader.readAsDataURL(file);
@@ -87,8 +88,9 @@ export default function AddProductPage() {
     files.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target?.result) {
-          setNewImagePreviews((prev) => [...prev, event.target.result as string]);
+        const result = event.target?.result;
+        if (result) {
+          setNewImagePreviews((prev) => [...prev, result as string]);
         }
       };
       reader.readAsDataURL(file);

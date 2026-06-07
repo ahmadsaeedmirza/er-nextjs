@@ -10,10 +10,15 @@ process.on("uncaughtException", (err) => {
 
 const app = require("./app");
 
-const DB = process.env.DATABASE.replace(
-  "<PASSWORD>",
-  process.env.DATABASE_PASSWORD,
-);
+const dbConnectionString = process.env.DATABASE || "";
+const DB = dbConnectionString.includes("<PASSWORD>")
+  ? dbConnectionString.replace("<PASSWORD>", process.env.DATABASE_PASSWORD || "")
+  : dbConnectionString;
+
+if (!DB) {
+  console.error("FATAL ERROR: DATABASE connection string is missing from env variables!");
+  process.exit(1);
+}
 
 // NEW, CLEAN, SUPPORTED VERSION
 mongoose
@@ -25,7 +30,7 @@ mongoose
   });
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
+const server = app.listen(port, "0.0.0.0", () => {
   console.log(`App running on port ${port}`);
 });
 
@@ -33,10 +38,12 @@ const server = app.listen(port, () => {
 const { Server } = require("socket.io");
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:8000"],
+    origin: ["http://localhost:3000", "http://localhost:8000", "https://er-salon.vercel.app"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true,
   },
+  transports: ["polling", "websocket"],
+  allowEIO3: true
 });
 app.set("io", io);
 
